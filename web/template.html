@@ -1,0 +1,512 @@
+<title>Hype Radar</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#FBFAF9; --surface:#FFFFFF; --surface-2:#F4F2EF; --ink:#17181C; --ink-2:#55575F;
+  --ink-3:#8A8C95; --line:#E3E0DB; --line-2:#CFCBC4;
+  --heat:#C2255C; --heat-soft:#FCE7EF; --money:#0C8599; --money-soft:#E0F3F6;
+  --good:#2B8A3E; --warn:#E8590C; --crit:#C92A2A;
+  --est:#8A8C95;
+  --shadow:0 1px 2px rgba(23,24,28,.05), 0 6px 20px -12px rgba(23,24,28,.18);
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#131418; --surface:#1A1C21; --surface-2:#22252B; --ink:#ECEAE6; --ink-2:#A8AAB3;
+  --ink-3:#71747D; --line:#2C2F36; --line-2:#3C404A;
+  --heat:#F06595; --heat-soft:#38141F; --money:#3BC9DB; --money-soft:#0E2E33;
+  --good:#51CF66; --warn:#FF922B; --crit:#FF6B6B; --est:#71747D;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --paper:#131418; --surface:#1A1C21; --surface-2:#22252B; --ink:#ECEAE6; --ink-2:#A8AAB3;
+  --ink-3:#71747D; --line:#2C2F36; --line-2:#3C404A;
+  --heat:#F06595; --heat-soft:#38141F; --money:#3BC9DB; --money-soft:#0E2E33;
+  --good:#51CF66; --warn:#FF922B; --crit:#FF6B6B; --est:#71747D;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px; margin:0 auto; padding-inline:16px; padding-block:0 56px}
+h1,h2,h3{font-family:"Bricolage Grotesque","Public Sans",sans-serif; text-wrap:balance; margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---- başlık ---- */
+header.top{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:30;
+  background:color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter:blur(12px); border-bottom:1px solid var(--line);
+}
+.top-inner{max-width:1240px; margin:0 auto; padding-inline:16px; padding-block:12px;
+  display:flex; flex-wrap:wrap; gap:12px 20px; align-items:baseline}
+.brand{font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:20px; letter-spacing:-.02em}
+.brand .dot{color:var(--heat)}
+.top-meta{display:flex; flex-wrap:wrap; gap:6px 16px; margin-left:auto; color:var(--ink-2); font-size:12px}
+.top-meta b{color:var(--ink); font-weight:600}
+
+/* ---- özet şeridi ---- */
+.summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px;
+  background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-block:20px}
+.sum{background:var(--surface); padding:12px 14px; display:flex; flex-direction:column; gap:2px}
+.sum .k{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3)}
+.sum .v{font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:24px; line-height:1.1;
+  font-variant-numeric:tabular-nums}
+.sum .s{font-size:11px; color:var(--ink-3)}
+.sum.heat .v{color:var(--heat)}
+.sum.money .v{color:var(--money)}
+
+/* ---- kontroller ---- */
+.controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px}
+.tabs{display:flex; gap:2px; background:var(--surface-2); border-radius:9px; padding:3px; border:1px solid var(--line)}
+.tab{appearance:none; border:0; background:transparent; color:var(--ink-2); font:inherit; font-weight:600;
+  font-size:13px; padding:6px 13px; border-radius:7px; cursor:pointer; white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow)}
+.tab:focus-visible,.chip:focus-visible,.row:focus-visible,select:focus-visible,input:focus-visible{
+  outline:2px solid var(--heat); outline-offset:2px}
+input[type="search"]{
+  font:inherit; padding:7px 11px; border:1px solid var(--line-2); border-radius:8px;
+  background:var(--surface); color:var(--ink); min-width:170px; flex:1 1 170px; max-width:280px}
+select{font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--line-2); border-radius:8px;
+  background:var(--surface); color:var(--ink)}
+.chip{appearance:none; font:inherit; font-size:12px; font-weight:600; padding:5px 10px; border-radius:20px;
+  border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2); cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+
+/* ---- tablo ---- */
+.list{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+.head,.row{display:grid; align-items:center;
+  grid-template-columns:44px 1fr 118px 104px 104px 96px 60px;
+  gap:12px; padding:10px 14px}
+.head{background:var(--surface-2); border-bottom:1px solid var(--line);
+  font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600;
+  position:sticky; top:calc(env(safe-area-inset-top,0px) + 49px); z-index:10}
+.head .r{text-align:right}
+.row{border-bottom:1px solid var(--line); cursor:pointer; background:transparent; width:100%;
+  text-align:left; font:inherit; color:inherit; border-left:0; border-right:0; border-top:0}
+.row:last-of-type{border-bottom:0}
+.row:hover{background:var(--surface-2)}
+.rank{font-family:"IBM Plex Mono",monospace; font-size:15px; font-weight:600; color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.rank.top{color:var(--heat)}
+.game{display:flex; gap:11px; align-items:center; min-width:0}
+.tile{width:40px; height:40px; border-radius:11px; flex:none; display:grid; place-items:center;
+  font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:14px; letter-spacing:-.02em;
+  background:hsl(var(--h) 62% 93%); color:hsl(var(--h) 58% 32%);
+  border:1px solid hsl(var(--h) 45% 84%)}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  .tile{background:hsl(var(--h) 34% 20%); color:hsl(var(--h) 70% 76%); border-color:hsl(var(--h) 30% 30%)}
+}}
+:root[data-theme="dark"] .tile{background:hsl(var(--h) 34% 20%); color:hsl(var(--h) 70% 76%);
+  border-color:hsl(var(--h) 30% 30%)}
+.game .t{min-width:0}
+.game .name{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.game .sub{font-size:11.5px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  display:flex; gap:6px; align-items:center}
+.pf{font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:600; padding:1px 4px; border-radius:4px;
+  border:1px solid var(--line-2); color:var(--ink-2); letter-spacing:.03em}
+.pf.a{border-color:var(--money); color:var(--money)}
+
+/* hype ölçer */
+.hype{display:flex; align-items:center; gap:8px}
+.hype .v{font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:17px; width:30px;
+  font-variant-numeric:tabular-nums}
+.bar{flex:1; height:5px; border-radius:3px; background:var(--surface-2); overflow:hidden; min-width:24px}
+.bar i{display:block; height:100%; border-radius:3px; background:var(--heat)}
+
+.tier{font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:5px; white-space:nowrap;
+  text-transform:uppercase; letter-spacing:.04em; display:inline-block}
+.tier.breakout{background:var(--heat-soft); color:var(--heat)}
+.tier.rising{background:var(--money-soft); color:var(--money)}
+.tier.established{background:var(--surface-2); color:var(--ink-2); border:1px solid var(--line-2)}
+.tier.watch{background:transparent; color:var(--ink-3); border:1px solid var(--line)}
+
+.cell{font-size:13px; font-variant-numeric:tabular-nums}
+.cell .lbl{display:none}
+.est{border-bottom:1px dashed var(--est); color:var(--ink-2)}
+.measured{font-weight:600}
+.delta{font-size:11px; font-variant-numeric:tabular-nums}
+.delta.up{color:var(--good)} .delta.down{color:var(--crit)} .delta.flat{color:var(--ink-3)}
+.r{text-align:right}
+
+/* ---- açılır detay ---- */
+.detail{grid-column:1/-1; padding:0; border-bottom:1px solid var(--line); background:var(--surface-2)}
+.detail-in{padding:16px 14px; display:grid; gap:18px; grid-template-columns:minmax(240px,1fr) minmax(260px,1.3fr)}
+.detail h3{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); margin-bottom:9px;
+  font-weight:700}
+.comp{display:grid; grid-template-columns:auto 1fr auto; gap:5px 10px; align-items:center; font-size:12px}
+.comp .cbar{height:4px; border-radius:2px; background:var(--line); overflow:hidden}
+.comp .cbar i{display:block; height:100%; background:var(--ink-2)}
+.comp .cv{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3)}
+.comp .na{color:var(--ink-3); font-style:italic; font-size:11px}
+.ctable{width:100%; border-collapse:collapse; font-size:12px}
+.ctable th,.ctable td{padding:3px 8px 3px 0; text-align:right; font-variant-numeric:tabular-nums}
+.ctable th:first-child,.ctable td:first-child{text-align:left}
+.ctable thead th{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3);
+  border-bottom:1px solid var(--line-2); font-weight:600}
+.ctable td{border-bottom:1px solid var(--line)}
+.ctable .miss{color:var(--ink-3)}
+.links{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+.links a{font-size:12px; font-weight:600; color:var(--heat); text-decoration:none;
+  border:1px solid var(--line-2); padding:4px 10px; border-radius:7px}
+.links a:hover{border-color:var(--heat)}
+
+/* ---- yöntem ---- */
+.method{margin-top:26px; border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:16px 18px}
+.method summary{cursor:pointer; font-weight:700; font-family:"Bricolage Grotesque",sans-serif; font-size:15px}
+.method .body{margin-top:12px; display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  color:var(--ink-2); font-size:13px}
+.method h4{margin:0 0 5px; font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3)}
+.method ul{margin:0; padding-left:17px} .method li{margin-bottom:3px}
+.method code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:var(--surface-2);
+  padding:1px 4px; border-radius:4px}
+.empty{padding:40px 16px; text-align:center; color:var(--ink-3)}
+footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
+
+@media (max-width:860px){
+  .head{display:none}
+  .row{grid-template-columns:36px 1fr; grid-template-areas:"rank game" ". hype" ". meta"; gap:6px 10px; padding:12px 14px}
+  .row .rank{grid-area:rank} .row .game{grid-area:game}
+  .row .c-hype{grid-area:hype}
+  .row .c-dl,.row .c-rev,.row .c-tier,.row .c-cty{grid-area:meta; display:inline}
+  .row .c-dl,.row .c-rev{margin-right:14px}
+  .cell .lbl{display:inline; font-size:10px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-3); margin-right:4px}
+  .r{text-align:left}
+  .detail-in{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">Hype Radar<span class="dot">.</span></div>
+    <div class="top-meta" id="topMeta"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="summary" id="summary"></div>
+
+  <div class="controls">
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-view="hype" aria-selected="true">Hype radar</button>
+      <button class="tab" role="tab" data-view="breakout" aria-selected="false">Patlayanlar</button>
+      <button class="tab" role="tab" data-view="grossing" aria-selected="false">Şu an zirvede</button>
+      <button class="tab" role="tab" data-view="new" aria-selected="false">Yeni çıkanlar</button>
+    </div>
+    <input type="search" id="q" placeholder="Oyun veya yayıncı ara" aria-label="Oyun veya yayıncı ara">
+    <select id="country" aria-label="Ülke"></select>
+    <button class="chip" id="fIos" aria-pressed="false">iOS</button>
+    <button class="chip" id="fAnd" aria-pressed="false">Android</button>
+    <select id="sort" aria-label="Sıralama">
+      <option value="hype">Hype skoruna göre</option>
+      <option value="downloads">İndirmeye göre</option>
+      <option value="revenue">Gelire göre</option>
+      <option value="new">En yeniye göre</option>
+      <option value="gross">Grossing sırasına göre</option>
+    </select>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <details class="method">
+    <summary>Hype skoru nasıl hesaplanıyor?</summary>
+    <div class="body" id="methodBody"></div>
+  </details>
+
+  <footer id="foot"></footer>
+</div>
+
+<script type="application/json" id="radar-data">__RADAR_DATA__</script>
+<script>
+(() => {
+  const DATA = JSON.parse(document.getElementById('radar-data').textContent);
+  const G = DATA.games;
+
+  const COMPONENT_LABELS = {
+    rankMomentum:  ['Sıra ivmesi', 'Pencere içinde chart sırasındaki log-ölçekli hareket'],
+    downloadVelocity:['İndirme hızı', 'Pencere içinde günlük indirme/rating artışı'],
+    lifetimeVelocity:['Yaşam boyu hız', 'Çıkıştan bu yana günlük ortalama indirme'],
+    breadth:       ['Ülke yayılımı', 'Kaç ülkede, ne ağırlıkta chart’ta'],
+    newEntry:      ['Yeni giriş', 'Chart’a bu turda ilk kez girdiği ülke oranı'],
+    monetization:  ['Para kazanma', 'Grossing sırasının free sırasına üstünlüğü'],
+    youth:         ['Yaş', 'Çıkışından bu yana geçen süre (yeni = yüksek)'],
+  };
+  const TIER_LABELS = { breakout:'Patlama', rising:'Yükselen', established:'Zirve', watch:'İzlemede' };
+  const CTY = Object.fromEntries(DATA.countries.map(c => [c.code, c.label]));
+
+  const nf = new Intl.NumberFormat('tr-TR');
+  // Türkçe kısaltmalar: bin / milyon / milyar. Tek harf "B" milyar sanılıyor, açık yazıyoruz.
+  const fmtCompact = (n) => {
+    if (n === null || n === undefined) return null;
+    if (n >= 1e9) return (n/1e9).toFixed(n>=1e10?0:1).replace('.',',') + ' milyar';
+    if (n >= 1e6) return (n/1e6).toFixed(n>=1e7?0:1).replace('.',',') + ' mn';
+    if (n >= 1e3) return Math.round(n/1e3) + ' bin';
+    return nf.format(n);
+  };
+  const fmtMoney = (n) => {
+    if (!n) return null;
+    if (n >= 1e9) return '$' + (n/1e9).toFixed(1).replace('.',',') + ' milyar';
+    if (n >= 1e6) return '$' + (n/1e6).toFixed(1).replace('.',',') + ' mn';
+    if (n >= 1e3) return '$' + Math.round(n/1e3) + ' bin';
+    return '$' + nf.format(n);
+  };
+  // Artifact CSP dış görselleri engelliyor; mağaza ikonu yerine başlıktan
+  // deterministik renkli karo üretiyoruz (aynı oyun her zaman aynı rengi alır).
+  const tile = (title) => {
+    const t = String(title ?? '?');
+    let h = 0;
+    for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
+    const hue = h % 360;
+    const initials = t.replace(/[^\p{L}\p{N} ]/gu, ' ').trim().split(/\s+/)
+      .slice(0, 2).map((w) => w[0]).join('').toLocaleUpperCase('tr') || '?';
+    return `<span class="tile" aria-hidden="true" style="--h:${hue}">${esc(initials)}</span>`;
+  };
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // ---- durum ----
+  const state = { view:'hype', q:'', country:'', ios:false, android:false, sort:'hype', open:null };
+  try {
+    const saved = JSON.parse(localStorage.getItem('hypeRadar.view') || '{}');
+    Object.assign(state, { view:saved.view ?? state.view, country:saved.country ?? '', sort:saved.sort ?? 'hype' });
+  } catch {}
+  const persist = () => { try {
+    localStorage.setItem('hypeRadar.view', JSON.stringify({view:state.view, country:state.country, sort:state.sort}));
+  } catch {} };
+
+  // ---- üst bilgi ----
+  const dt = new Date(DATA.takenAt);
+  const fmtDate = new Intl.DateTimeFormat('tr-TR', {day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'});
+  document.getElementById('topMeta').innerHTML = [
+    `Son tarama <b>${esc(fmtDate.format(dt))}</b>`,
+    DATA.coldStart
+      ? `<b>ilk tarama</b> — ivme sinyalleri sonraki turda açılıyor`
+      : `Karşılaştırma penceresi <b>${String(DATA.windowDays).replace('.',',')} gün</b>`,
+    `<b>${DATA.totalGames ?? DATA.counts.games}</b> oyun tarandı · <b>${DATA.countries.length}</b> ülke · 2 mağaza`,
+  ].join('<span style="color:var(--line-2)">|</span>');
+
+  // ---- özet ----
+  // Sayılar tam taramadan gelir (gömülü liste yalnız üst kısım).
+  const S = DATA.summary ?? {};
+  const tierCount = (t) => S[t] ?? G.filter(g => g.tier === t).length;
+  const topRev = S.revenueDaily ?? G.reduce((s,g) => s + (g.revenueDailyEstimate || 0), 0);
+  const measuredDl = S.measuredInstalls ?? G.reduce((s,g) => s + (g.downloads.androidTotal || 0), 0);
+  document.getElementById('summary').innerHTML = `
+    <div class="sum heat"><span class="k">Patlama</span><span class="v">${tierCount('breakout')}</span>
+      <span class="s">genç + yüksek ivme</span></div>
+    <div class="sum"><span class="k">Yükselen</span><span class="v">${tierCount('rising')}</span>
+      <span class="s">hype ≥ 45</span></div>
+    <div class="sum"><span class="k">Zirve</span><span class="v">${tierCount('established')}</span>
+      <span class="s">grossing ilk 20</span></div>
+    <div class="sum"><span class="k">Çapraz platform</span><span class="v">${DATA.counts.crossPlatform}</span>
+      <span class="s">iOS + Android eşleşti</span></div>
+    <div class="sum money"><span class="k">Takip edilen gelir</span><span class="v">${fmtMoney(topRev) ?? '—'}</span>
+      <span class="s">gün / tahmin</span></div>
+    <div class="sum"><span class="k">Ölçülen kurulum</span><span class="v">${fmtCompact(measuredDl) ?? '—'}</span>
+      <span class="s">Play, kümülatif</span></div>`;
+
+  // ---- ülke seçici ----
+  const cSel = document.getElementById('country');
+  cSel.innerHTML = '<option value="">Tüm ülkeler</option>' +
+    DATA.countries.map(c => `<option value="${c.code}">${esc(c.label)}</option>`).join('');
+  cSel.value = state.country;
+  document.getElementById('sort').value = state.sort;
+
+  // ---- filtre + sıralama ----
+  function visible() {
+    let rows = G.slice();
+    if (state.view === 'breakout') rows = rows.filter(g => g.tier === 'breakout');
+    if (state.view === 'grossing') rows = rows.filter(g => g.bestGross !== null);
+    if (state.view === 'new') rows = rows.filter(g => g.ageDays !== null && g.ageDays <= 120);
+    if (state.country) rows = rows.filter(g => g.ranks[state.country]);
+    if (state.ios) rows = rows.filter(g => g.platforms.ios);
+    if (state.android) rows = rows.filter(g => g.platforms.android);
+    if (state.q) {
+      const q = state.q.toLocaleLowerCase('tr');
+      rows = rows.filter(g => (g.title||'').toLocaleLowerCase('tr').includes(q) ||
+                              (g.publisher||'').toLocaleLowerCase('tr').includes(q));
+    }
+    const cmp = {
+      hype:      (a,b) => b.hype - a.hype,
+      downloads: (a,b) => (b.downloads.total||0) - (a.downloads.total||0),
+      revenue:   (a,b) => (b.revenueDailyEstimate||0) - (a.revenueDailyEstimate||0),
+      new:       (a,b) => (a.ageDays ?? 1e9) - (b.ageDays ?? 1e9),
+      gross:     (a,b) => (a.bestGross ?? 1e9) - (b.bestGross ?? 1e9),
+    }[state.sort];
+    // "Şu an zirvede" sekmesi doğal olarak grossing sırasına göre açılır
+    return rows.sort(state.view === 'grossing' && state.sort === 'hype' ? cmp_gross : cmp);
+  }
+  const cmp_gross = (a,b) => (a.bestGross ?? 1e9) - (b.bestGross ?? 1e9);
+
+  // ---- satır çizimi ----
+  function rowHtml(g, i) {
+    const dl = g.downloads.total;
+    const dlMeasured = g.downloads.androidTotal !== null && !g.platforms.ios;
+    const rev = g.revenueDailyEstimate;
+    const win = g.downloads.windowDelta;
+    return `
+      <button class="row" data-key="${g.key}" aria-expanded="${state.open===g.key}">
+        <span class="rank ${i < 3 ? 'top' : ''}">${i+1}</span>
+        <span class="game">
+          ${tile(g.title)}
+          <span class="t">
+            <span class="name">${esc(g.title)}</span>
+            <span class="sub">
+              ${esc(g.publisher || '')}
+              ${g.platforms.ios ? '<span class="pf">iOS</span>' : ''}
+              ${g.platforms.android ? '<span class="pf a">AND</span>' : ''}
+              ${g.ageDays !== null ? `<span class="mono" style="font-size:10.5px">${g.ageDays}g</span>` : ''}
+            </span>
+          </span>
+        </span>
+        <span class="cell c-hype hype">
+          <span class="v" style="color:${g.hype>=60?'var(--heat)':'inherit'}">${Math.round(g.hype)}</span>
+          <span class="bar"><i style="width:${Math.max(3,Math.min(100,g.hype))}%"></i></span>
+        </span>
+        <span class="cell c-dl r">
+          <span class="lbl">İndirme</span>
+          ${dl ? `<span class="${dlMeasured?'measured':'est'}" title="${dlMeasured?'Play ölçümü':'Play ölçümü + iOS tahmini'}">${dlMeasured?'':'≈'}${fmtCompact(dl)}</span>` : '<span style="color:var(--ink-3)">—</span>'}
+          ${win ? `<br><span class="delta up">+${fmtCompact(win)}</span>` : ''}
+        </span>
+        <span class="cell c-rev r">
+          <span class="lbl">Gelir/gün</span>
+          ${rev ? `<span class="est" title="Grossing sırasından modellenmiş tahmin">≈${fmtMoney(rev)}</span>`
+                : '<span style="color:var(--ink-3)">—</span>'}
+        </span>
+        <span class="cell c-tier"><span class="tier ${g.tier}">${TIER_LABELS[g.tier]}</span></span>
+        <span class="cell c-cty r mono" title="Chart'ta olduğu ülke sayısı">${g.countryCount}<span class="lbl"> ülke</span></span>
+      </button>
+      ${state.open === g.key ? detailHtml(g) : ''}`;
+  }
+
+  function detailHtml(g) {
+    const comps = Object.entries(COMPONENT_LABELS).map(([k, [label, desc]]) => {
+      const v = g.components[k];
+      return `<span title="${esc(desc)}">${esc(label)}</span>
+        <span class="cbar">${v===null?'':`<i style="width:${Math.round(v*100)}%"></i>`}</span>
+        ${v===null ? '<span class="na">ölçülemedi</span>' : `<span class="cv">${Math.round(v*100)}</span>`}`;
+    }).join('');
+
+    const countries = DATA.countries.filter(c => g.ranks[c.code]);
+    const rows = countries.map(c => {
+      const r = g.ranks[c.code];
+      const cell = (x) => x ? `<td class="mono">#${x}</td>` : '<td class="miss">—</td>';
+      return `<tr><td>${esc(c.label)}</td>${cell(r.free)}${cell(r.grossing)}${cell(r.new)}${cell(r.paid)}</tr>`;
+    }).join('');
+
+    const p = g.platforms;
+    return `<div class="detail"><div class="detail-in">
+      <div>
+        <h3>Skor kırılımı · kapsam ${Math.round(g.coverage*100)}%</h3>
+        <div class="comp">${comps}</div>
+        <h3 style="margin-top:16px">Mağaza verisi</h3>
+        <table class="ctable"><tbody>
+          <tr><td>Play kümülatif kurulum</td><td class="measured">${fmtCompact(g.downloads.androidTotal) ?? '<span class="miss">—</span>'}</td></tr>
+          <tr><td>iOS indirme (tahmin)</td><td class="est">${g.downloads.iosTotalEstimate ? '≈'+fmtCompact(g.downloads.iosTotalEstimate) : '<span class="miss">—</span>'}</td></tr>
+          <tr><td>IAP fiyat aralığı</td><td>${esc(g.iapRange || '—')}</td></tr>
+          <tr><td>iOS puan</td><td>${p.ios?.rating ? p.ios.rating.toFixed(2).replace('.',',')+' ('+fmtCompact(p.ios.ratingCount)+')' : '<span class="miss">—</span>'}</td></tr>
+          <tr><td>Android puan</td><td>${p.android?.rating ? p.android.rating.toFixed(2).replace('.',',')+' ('+fmtCompact(p.android.ratingCount)+')' : '<span class="miss">—</span>'}</td></tr>
+          <tr><td>Çıkış</td><td>${g.releasedAt ? esc(new Date(g.releasedAt).toLocaleDateString('tr-TR')) : '<span class="miss">—</span>'}</td></tr>
+          <tr><td>Tür</td><td>${esc((g.genres||[]).filter(x=>x!=='Games').join(', ') || '—')}</td></tr>
+        </tbody></table>
+        <div class="links">
+          ${p.ios?.url ? `<a href="${esc(p.ios.url)}" target="_blank" rel="noopener">App Store ↗</a>` : ''}
+          ${p.android?.url ? `<a href="${esc(p.android.url)}" target="_blank" rel="noopener">Google Play ↗</a>` : ''}
+        </div>
+      </div>
+      <div>
+        <h3>Ülke bazında sıra</h3>
+        <div style="overflow-x:auto">
+        <table class="ctable">
+          <thead><tr><th>Ülke</th><th>Ücretsiz</th><th>Hasılat</th><th>Yeni</th><th>Ücretli</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>
+    </div></div>`;
+  }
+
+  function render() {
+    const rows = visible();
+    const list = document.getElementById('list');
+    if (!rows.length) {
+      list.innerHTML = '<div class="empty">Bu filtrelerle eşleşen oyun yok.</div>';
+      return;
+    }
+    list.innerHTML =
+      `<div class="head">
+        <span>#</span><span>Oyun</span><span>Hype</span><span class="r">İndirme</span>
+        <span class="r">Gelir/gün</span><span>Kademe</span><span class="r">Ülke</span>
+      </div>` + rows.slice(0, 250).map(rowHtml).join('') +
+      (rows.length > 250 ? `<div class="empty">${rows.length - 250} oyun daha — aramayla daraltın.</div>` : '');
+  }
+
+  // ---- olaylar ----
+  document.getElementById('list').addEventListener('click', (e) => {
+    const row = e.target.closest('.row');
+    if (!row) return;
+    state.open = state.open === row.dataset.key ? null : row.dataset.key;
+    render();
+  });
+  document.getElementById('tabs').addEventListener('click', (e) => {
+    const t = e.target.closest('.tab'); if (!t) return;
+    state.view = t.dataset.view; state.open = null;
+    [...document.querySelectorAll('.tab')].forEach(x => x.setAttribute('aria-selected', String(x === t)));
+    persist(); render();
+  });
+  document.getElementById('q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
+  cSel.addEventListener('change', (e) => { state.country = e.target.value; persist(); render(); });
+  document.getElementById('sort').addEventListener('change', (e) => { state.sort = e.target.value; persist(); render(); });
+  for (const [id, key] of [['fIos','ios'], ['fAnd','android']]) {
+    document.getElementById(id).addEventListener('click', (e) => {
+      state[key] = !state[key];
+      e.currentTarget.setAttribute('aria-pressed', String(state[key]));
+      render();
+    });
+  }
+  [...document.querySelectorAll('.tab')].forEach(x =>
+    x.setAttribute('aria-selected', String(x.dataset.view === state.view)));
+
+  // ---- yöntem kutusu ----
+  document.getElementById('methodBody').innerHTML = `
+    <div>
+      <h4>Bileşenler ve ağırlıkları</h4>
+      <ul>${Object.entries(DATA.weights || {}).map(([k,w]) =>
+        `<li><b>${esc(COMPONENT_LABELS[k]?.[0] ?? k)}</b> — %${Math.round(w*100)}<br>
+         <span style="color:var(--ink-3)">${esc(COMPONENT_LABELS[k]?.[1] ?? '')}</span></li>`).join('')}</ul>
+      <p style="color:var(--ink-3)">Her bileşen kohort içi yüzdelik sıraya çevrilir; ölçülemeyen bileşenin
+      ağırlığı kalanlara dağıtılır ve satır <b>kapsam</b> oranıyla cezalandırılır.</p>
+    </div>
+    <div>
+      <h4>Ölçülen veri</h4>
+      <ul>${DATA.methodology.measured.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+      <h4 style="margin-top:12px">Tahmin edilen veri</h4>
+      <ul>${DATA.methodology.estimated.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+      <p style="color:var(--ink-3)">${esc(DATA.methodology.note)} Tahmini sayılar tabloda
+      <span class="est">kesikli altı çizili</span> ve <code>≈</code> ile gösterilir.</p>
+    </div>
+    <div>
+      <h4>Kalibrasyon</h4>
+      <p>iOS indirme tahmini sabit katsayı değil: her taramada iOS↔Android eşleşmiş
+      <b>${DATA.calibration.pairs}</b> oyundan medyan oran hesaplanıyor —
+      bu turda <b>1 değerlendirme ≈ ${String(DATA.calibration.installsPerRating).replace('.',',')} indirme</b>.</p>
+      <h4 style="margin-top:12px">Kademeler</h4>
+      <ul>
+        <li><span class="tier breakout">Patlama</span> 180 günden genç ve hype ≥ 60</li>
+        <li><span class="tier rising">Yükselen</span> hype ≥ 45</li>
+        <li><span class="tier established">Zirve</span> bir ülkede hasılat ilk 20</li>
+        <li><span class="tier watch">İzlemede</span> chart'ta ama sinyal zayıf</li>
+      </ul>
+    </div>`;
+
+  document.getElementById('foot').textContent =
+    `Snapshot #${DATA.snapshotId} · bu sayfada ${DATA.games.length} oyun gösteriliyor` +
+    (DATA.totalGames ? ` (taranan ${DATA.totalGames} oyunun hype sıralamasına göre üst kısmı)` : '') +
+    ` · veri: App Store RSS + iTunes Lookup, Google Play · liste 2-3 günde bir yenilenir`;
+
+  render();
+})();
+</script>

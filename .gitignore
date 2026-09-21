@@ -1,0 +1,7 @@
+node_modules/
+.venv/
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/*.log
+web/dashboard.html
