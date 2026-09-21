@@ -38,3 +38,10 @@ export const APPLE_LOOKUP_BATCH = 100; // iTunes lookup tek istekte 100 id kabul
 // Toplama sıklığından BAĞIMSIZ tutuluyor — daha sık toplamaya geçilirse
 // pencereyi değiştirmek tek satır, geçmiş veri zaten birikmiş olur.
 export const SCORE_WINDOW_DAYS = 2;
+
+// Bir snapshot ivme kıyası için "yeterince eski" sayılmadan önceki alt sınır.
+// Elle tetiklenen koşularda iki snapshot saatler arayla alınabiliyor; o aralıkta
+// indirme/rating farkı ölçümden çok gürültüdür ve gün başına çevrilince şişer.
+// Bu sınırı geçen aday yoksa skor soğuk başlangıç gibi davranır — sahte ivme
+// üretmektense ivme bileşenlerini kapatmayı tercih ediyoruz.
+export const MIN_WINDOW_DAYS = 0.5;
