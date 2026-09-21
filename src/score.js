@@ -1,5 +1,5 @@
 import { openDb } from './db.js';
-import { COUNTRIES, CHART_DEPTH, SCORE_WINDOW_DAYS } from './config.js';
+import { COUNTRIES, CHART_DEPTH, SCORE_WINDOW_DAYS, MIN_WINDOW_DAYS } from './config.js';
 
 const CW = Object.fromEntries(COUNTRIES.map((c) => [c.code, c.weight]));
 const MISSING_RANK = CHART_DEPTH + 25; // chart dışındaki oyun için varsayılan "sıra"
@@ -81,7 +81,10 @@ export function computeScores(db, { snapshotId, prevSnapshotId } = {}) {
     prev = snaps.find((s) => s.id === prevSnapshotId) ?? null;
   } else {
     const target = new Date(cur.taken_at).getTime() - SCORE_WINDOW_DAYS * DAY;
-    const older = snaps.filter((s) => s.id < cur.id);
+    // MIN_WINDOW_DAYS'ten yakın adaylar elenir: saatler arayla alınmış iki snapshot
+    // arasındaki fark ivme değil gürültüdür ve gün başına çevrilince şişer.
+    const cutoff = new Date(cur.taken_at).getTime() - MIN_WINDOW_DAYS * DAY;
+    const older = snaps.filter((s) => s.id < cur.id && new Date(s.taken_at).getTime() <= cutoff);
     for (const s of older) {
       if (!prev || Math.abs(new Date(s.taken_at) - target) < Math.abs(new Date(prev.taken_at) - target)) prev = s;
     }
