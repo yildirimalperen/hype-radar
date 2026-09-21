@@ -3,11 +3,16 @@ import { COUNTRIES, APPLE_FEEDS, PLAY_COLLECTIONS } from './config.js';
 import { fetchAppleChart, enrichAppleApps } from './sources/apple.js';
 import { fetchPlayChart, enrichPlayApps } from './sources/play.js';
 import { linkStores } from './link.js';
+import { importSnapshots, exportSnapshot, pruneSnapshots } from './snapshot-io.js';
 
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 export async function collect({ note = null } = {}) {
   const db = openDb();
+  // Actions runner temiz başladığı için geçmiş repo'daki snapshot dosyalarından kurulur.
+  const restored = importSnapshots(db);
+  if (restored.loaded) log(`${restored.loaded} snapshot repo'dan geri yüklendi (${restored.files} dosya)`);
+
   const snapshotId = startSnapshot(db, note);
   log(`snapshot #${snapshotId} başladı`);
 
@@ -107,6 +112,11 @@ export async function collect({ note = null } = {}) {
   log(`iOS↔Android eşleşmesi: ${links} çift`);
 
   finishSnapshot(db, snapshotId, 'ok', `${rankRows} sıra, ${iosIds.size + androidIds.size} oyun`);
+
+  const exported = exportSnapshot(db, snapshotId);
+  const pruned = pruneSnapshots();
+  log(`snapshot dışa aktarıldı: ${exported.file.split('/').pop()} (${exported.ranks} sıra)`);
+  if (pruned) log(`${pruned} eski snapshot dosyası budandı`);
   log(`snapshot #${snapshotId} tamam`);
   db.close();
   return snapshotId;

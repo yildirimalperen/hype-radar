@@ -1,5 +1,5 @@
 import { openDb } from './db.js';
-import { COUNTRIES, CHART_DEPTH } from './config.js';
+import { COUNTRIES, CHART_DEPTH, SCORE_WINDOW_DAYS } from './config.js';
 
 const CW = Object.fromEntries(COUNTRIES.map((c) => [c.code, c.weight]));
 const MISSING_RANK = CHART_DEPTH + 25; // chart dışındaki oyun için varsayılan "sıra"
@@ -73,9 +73,19 @@ export function computeScores(db, { snapshotId, prevSnapshotId } = {}) {
   const snaps = db.prepare("SELECT id, taken_at FROM snapshots WHERE status='ok' ORDER BY id DESC").all();
   if (!snaps.length) throw new Error('tamamlanmış snapshot yok');
   const cur = snapshotId ? snaps.find((s) => s.id === snapshotId) : snaps[0];
-  const prev = prevSnapshotId
-    ? snaps.find((s) => s.id === prevSnapshotId)
-    : snaps.find((s) => s.id < cur.id) ?? null;
+  // Önceki snapshot: SCORE_WINDOW_DAYS gün öncesine EN YAKIN olan.
+  // Sadece "bir önceki kayıt" alınsaydı, toplama sıklığı değişince pencere de
+  // sessizce değişir ve skorlar kıyaslanamaz hâle gelirdi.
+  let prev = null;
+  if (prevSnapshotId) {
+    prev = snaps.find((s) => s.id === prevSnapshotId) ?? null;
+  } else {
+    const target = new Date(cur.taken_at).getTime() - SCORE_WINDOW_DAYS * DAY;
+    const older = snaps.filter((s) => s.id < cur.id);
+    for (const s of older) {
+      if (!prev || Math.abs(new Date(s.taken_at) - target) < Math.abs(new Date(prev.taken_at) - target)) prev = s;
+    }
+  }
 
   const nowData = loadSnapshot(db, cur.id);
   const prevData = prev ? loadSnapshot(db, prev.id) : new Map();

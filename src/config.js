@@ -33,3 +33,8 @@ export const CHART_DEPTH = 100;
 // Play detay çekiminde eşzamanlılık. Çok yükseltmek 429 getiriyor.
 export const PLAY_DETAIL_CONCURRENCY = 6;
 export const APPLE_LOOKUP_BATCH = 100; // iTunes lookup tek istekte 100 id kabul ediyor
+
+// Skor penceresi: ivme "bugün vs N gün önce" olarak hesaplanır.
+// Toplama sıklığından BAĞIMSIZ tutuluyor — daha sık toplamaya geçilirse
+// pencereyi değiştirmek tek satır, geçmiş veri zaten birikmiş olur.
+export const SCORE_WINDOW_DAYS = 2;
