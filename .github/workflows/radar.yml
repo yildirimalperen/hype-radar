@@ -18,9 +18,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write   # snapshot dosyalarını repo'ya yazmak için
-  pages: write
-  id-token: write
+  contents: write   # snapshot + docs/ çıktısını repo'ya yazmak için
 
 jobs:
   refresh:
@@ -44,37 +42,23 @@ jobs:
       - name: Skorla ve paneli derle
         run: node src/publish.js
 
-      - name: Panel çıktısını hazırla
+      # Pages, main dalındaki docs/ klasöründen servis ediliyor (ai-radar ile aynı kalıp):
+      # ayrı bir deploy job'ı yok, commit yayın demek.
+      - name: Pages çıktısını hazırla
         run: |
-          mkdir -p site
-          cp web/dashboard.html site/index.html
-          cp data/radar.json site/radar.json   # makine-okunur çıktı, ekip başka yerden tüketebilsin
+          mkdir -p docs
+          cp web/dashboard.html docs/index.html
+          cp data/radar.slim.json docs/radar.json   # makine-okunur çıktı (~330 KB)
+          touch docs/.nojekyll                   # Jekyll işlemesini kapat
 
-      - name: Snapshot'ı repo'ya işle
+      - name: Snapshot ve paneli işle
         run: |
           git config user.name  "hype-radar[bot]"
           git config user.email "hype-radar@users.noreply.github.com"
-          git add data/snapshots
+          git add data/snapshots docs
           if git diff --cached --quiet; then
-            echo "yeni snapshot yok, commit atlanıyor"
+            echo "değişiklik yok, commit atlanıyor"
           else
-            git commit -m "snapshot: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git commit -m "radar: $(date -u '+%Y-%m-%d %H:%M UTC') taraması"
             git push
           fi
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-
-  deploy:
-    needs: refresh
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    permissions:
-      pages: write
-      id-token: write
-    steps:
-      - id: deploy
-        uses: actions/deploy-pages@v4

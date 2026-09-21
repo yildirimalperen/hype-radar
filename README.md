@@ -3,7 +3,11 @@
 Kısa sürede tutan mobil oyunları yakalamak için market radarı. App Store ve Google Play
 chart'larını düzenli tarar, her oyuna bir **hype skoru** verir ve sonucu tek bir panelde gösterir.
 
-**Panel:** https://claude.ai/artifact/Gosp4EqcjQ1bPso98dXKig
+**Panel:** https://yildirimalperen.github.io/hype-radar/
+**Makine-okunur çıktı:** https://yildirimalperen.github.io/hype-radar/radar.json
+
+> Sayfa herkese açıktır. Veri zaten halka açık mağaza chart'larından geliyor,
+> ancak skor formülü ve ağırlıklar da bu repo ile birlikte açıktır.
 
 ---
 
@@ -74,13 +78,25 @@ node src/publish.js      # skorla + paneli derle -> web/dashboard.html
 Kapsam `src/config.js` içinde: ülke listesi, chart derinliği, eşzamanlılık.
 
 ### Otomatik tazeleme
-`launchd` işi 2 günde bir `refresh.sh` çalıştırır:
+GitHub Actions (`.github/workflows/radar.yml`) 2 günde bir çalışır: tarar, skorlar,
+`docs/` çıktısını üretir ve commit eder. Pages `main` dalının `docs/` klasöründen
+servis edildiği için **commit = yayın**; ayrı bir deploy adımı yoktur.
 
 ```bash
-launchctl list | grep hyperadar          # durum
-tail -f data/refresh.log                 # günlük
-launchctl unload ~/Library/LaunchAgents/ai.hyperadar.refresh.plist   # durdur
+gh workflow run "Hype Radar tazeleme"    # elle tetikle
+gh run list --workflow radar.yml         # son koşular
 ```
+
+Geçmiş `data/snapshots/` altında sıkıştırılmış JSON olarak yaşar; runner temiz
+başladığı için DB her koşuda bu dosyalardan yeniden kurulur. Bu sayede paneli
+yeniden toplamadan da üretebilirsiniz:
+
+```bash
+node src/publish.js    # DB yoksa snapshot'lardan kurar
+```
+
+Toplama sıklığı ile skor penceresi ayrıdır: cron'u sıklaştırırsanız geçmiş daha
+ince granülerlikte birikir, pencereyi `SCORE_WINDOW_DAYS` ile ayarlarsınız.
 
 ---
 
@@ -95,10 +111,13 @@ src/link.js            iOS <-> Android eşleştirme
 src/collect.js         toplama orkestrasyonu -> snapshot
 src/score.js           hype skoru
 src/estimate.js        TAHMİN katmanı (gelir modeli, indirme kalibrasyonu)
+src/snapshot-io.js     snapshot dışa/içe aktarma (repo'da taşınan geçmiş)
 src/report.js          çapraz-platform birleştirme -> data/radar.json
 src/publish.js         panel HTML üretimi
 web/template.html      panel arayüzü
-data/radar.db          snapshot geçmişi (her koşu birikir)
+data/radar.db          yerel SQLite (izlenmiyor, snapshot'lardan kurulur)
+data/snapshots/        taşınabilir snapshot geçmişi (izleniyor, 90 dosyada budanır)
+docs/                  yayınlanan panel (GitHub Pages kaynağı)
 ```
 
 Veri `data/radar.db` içinde birikir; her tazeleme yeni bir snapshot ekler, eskisi silinmez.

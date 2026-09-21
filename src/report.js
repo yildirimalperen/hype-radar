@@ -4,6 +4,8 @@ import { openDb } from './db.js';
 import { computeScores, WEIGHTS } from './score.js';
 import { COUNTRIES } from './config.js';
 import { estimateDailyRevenue, calibrateInstallsPerRating, estimateIosInstalls } from './estimate.js';
+import { importSnapshots } from './snapshot-io.js';
+import { linkStores } from './link.js';
 
 const OUT = resolve(import.meta.dirname, '../data/radar.json');
 
@@ -47,6 +49,13 @@ function bestRanks(members) {
 
 export function buildReport() {
   const db = openDb();
+
+  // Rapor, yeniden toplamadan da üretilebilmeli: temiz bir çalışma alanında
+  // (CI runner'ı, yeni klon, worktree) DB yoktur ama snapshot dosyaları repo'dadır.
+  // İçe aktarma tekrar-güvenli; yüklü snapshot'ı atlar.
+  const restored = importSnapshots(db);
+  if (restored.loaded) linkStores(db);
+
   const { snapshot, prev, windowDays, scored } = computeScores(db);
 
   // iOS indirme tahmini için oranı bu koşunun kendi eşleşmiş çiftlerinden kalibre et

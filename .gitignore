@@ -6,4 +6,4 @@ data/*.db-shm
 data/*.log
 web/dashboard.html
 data/radar.json
-site/
+data/radar.slim.json

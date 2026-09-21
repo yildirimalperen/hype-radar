@@ -55,8 +55,15 @@ function slim(report) {
 
 const report = buildReport();
 const tpl = readFileSync(TEMPLATE, 'utf8');
+const slimReport = slim(report);
+const json = JSON.stringify(slimReport);
+
+// Makine-okunur çıktı. Tam rapor (data/radar.json) 2+ MB ve her tazelemede
+// commit'lenirse repo yılda yüz MB'larca şişer; yayınlanan sürüm panelin
+// gömdüğü slim veri kümesi ile aynı.
+writeFileSync(resolve(ROOT, 'data/radar.slim.json'), json);
+
 // </script> dizisi gömülü JSON'u erken kapatabilir; kaçır.
-const json = JSON.stringify(slim(report)).replace(/<\//g, '<\\/');
-writeFileSync(OUT, tpl.replace('__RADAR_DATA__', json));
+writeFileSync(OUT, tpl.replace('__RADAR_DATA__', json.replace(/<\//g, '<\\/')));
 const kb = Math.round(Buffer.byteLength(readFileSync(OUT)) / 1024);
 console.log(`panel yazıldı: ${OUT} (${kb} KB, ${report.games.length} oyun)`);
