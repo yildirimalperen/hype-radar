@@ -80,9 +80,10 @@ select{font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--lin
 .head,.row{display:grid; align-items:center;
   grid-template-columns:44px 1fr 118px 104px 104px 96px 60px;
   gap:12px; padding:10px 14px}
+/* Yapışkan DEĞİL: .list üzerindeki overflow:hidden ile birlikte sticky, ilk satırı
+   başlığın altında bırakıyordu. Sıralı listede 1. satırın gizlenmesi kabul edilemez. */
 .head{background:var(--surface-2); border-bottom:1px solid var(--line);
-  font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600;
-  position:sticky; top:calc(env(safe-area-inset-top,0px) + 49px); z-index:10}
+  font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600}
 .head .r{text-align:right}
 .row{border-bottom:1px solid var(--line); cursor:pointer; background:transparent; width:100%;
   text-align:left; font:inherit; color:inherit; border-left:0; border-right:0; border-top:0}
