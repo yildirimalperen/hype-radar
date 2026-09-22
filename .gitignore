@@ -7,3 +7,5 @@ data/*.log
 web/dashboard.html
 data/radar.json
 data/radar.slim.json
+.playwright-mcp/
+serve-preview.py
