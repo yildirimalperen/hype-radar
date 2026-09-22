@@ -120,7 +120,9 @@ export function buildReport() {
       key: `g${lead.appId}`,
       title: lead.app.title,
       publisher: lead.app.publisher,
-      icon: lead.app.icon,
+      // iOS ikonu tercih ediliyor: Apple zaten 100x100 küçük resim veriyor ve
+      // URL'i boyut ekiyle yeniden ölçeklenebiliyor. Play'in ham ikonu 360 KB.
+      icon: ios?.app.icon ?? android?.app.icon ?? lead.app.icon,
       genres: lead.app.genres ? JSON.parse(lead.app.genres) : [],
       releasedAt: lead.app.released_at,
       ageDays: lead.ageDays === null ? null : Math.round(lead.ageDays),

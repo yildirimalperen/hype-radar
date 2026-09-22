@@ -77,7 +77,11 @@ input[type="search"]{flex:1 1 180px; max-width:260px}
 .row.open .rank, .rank.podium{color:var(--heat)}
 
 .g{display:flex; gap:11px; align-items:center; min-width:0}
-.tile{width:34px; height:34px; border-radius:9px; flex:none; display:grid; place-items:center;
+/* İkon: gerçek mağaza görseli üstte, yüklenemezse altındaki baş-harf karosu kalır. */
+.ic{position:relative; width:34px; height:34px; flex:none}
+.ic img{position:absolute; inset:0; width:100%; height:100%; border-radius:9px;
+  object-fit:cover; background:var(--sunk)}
+.tile{position:absolute; inset:0; border-radius:9px; display:grid; place-items:center;
   font-family:"Bricolage Grotesque",sans-serif; font-weight:600; font-size:12.5px;
   background:hsl(var(--h) 55% 94%); color:hsl(var(--h) 45% 34%)}
 :root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
@@ -249,14 +253,37 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
   const age = (d) => d === null || d === undefined ? null
     : (d < 30 ? d + 'd' : Math.round(d / MONTH) + 'm');
 
-  // Mağaza ikonları CSP'den geçmiyor; başlıktan deterministik renkli karo üretiyoruz.
-  const tile = (title) => {
+  /**
+   * İkon URL'ini 68px'e indirger. Ham hâli kullanılamaz: Play ikonu 360 KB,
+   * 250 satırda 90 MB eder. Küçültülmüş hâlleri ~5-9 KB.
+   *   Apple: yolun sonundaki  /100x100bb.jpg  ->  /68x68bb.webp
+   *   Play : URL sonuna       =s68-rw
+   */
+  const ICON_PX = 68;
+  const iconUrl = (u) => {
+    if (!u) return null;
+    if (u.includes('mzstatic.com')) return u.replace(/\/\d+x\d+[a-z]*\.(jpg|png|webp)$/i, `/${ICON_PX}x${ICON_PX}bb.webp`);
+    if (u.includes('googleusercontent.com')) return u.split('=')[0] + `=s${ICON_PX}-rw`;
+    return u;
+  };
+
+  // İkon yüklenemezse (ölü URL, engelli ağ) başlıktan üretilen renkli karo görünür.
+  const initials = (title) => {
     const t = String(title ?? '?');
     let h = 0;
     for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
     const ini = t.replace(/[^\p{L}\p{N} ]/gu, ' ').trim().split(/\s+/)
       .slice(0, 2).map((w) => w[0]).join('').toLocaleUpperCase('tr') || '?';
-    return `<span class="tile" aria-hidden="true" style="--h:${h % 360}">${esc(ini)}</span>`;
+    return { hue: h % 360, ini };
+  };
+  const tile = (g) => {
+    const { hue, ini } = initials(typeof g === 'string' ? g : g.title);
+    const url = typeof g === 'string' ? null : iconUrl(g.icon);
+    return `<span class="ic" style="--h:${hue}">
+      <span class="tile" aria-hidden="true">${esc(ini)}</span>
+      ${url ? `<img src="${esc(url)}" alt="" loading="lazy" decoding="async"
+                   width="${ICON_PX / 2}" height="${ICON_PX / 2}" onerror="this.remove()">` : ''}
+    </span>`;
   };
 
   const state = { view:'hype', q:'', country:'', ios:false, android:false, sort:'hype', open:null };
@@ -330,7 +357,7 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
            role="button" tabindex="0" aria-expanded="${state.open === g.key}">
         <span class="rank${i < 3 ? ' podium' : ''}">${i + 1}</span>
         <span class="g">
-          ${tile(g.title)}
+          ${tile(g)}
           <span class="txt">
             <span class="nm">${esc(g.title)}</span>
             <span class="sub">
