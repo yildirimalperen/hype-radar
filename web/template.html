@@ -1,302 +1,200 @@
 <title>Hype Radar</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root{
-  --paper:#FBFAF9; --surface:#FFFFFF; --surface-2:#F4F2EF; --ink:#17181C; --ink-2:#55575F;
-  --ink-3:#8A8C95; --line:#E3E0DB; --line-2:#CFCBC4;
-  --heat:#C2255C; --heat-soft:#FCE7EF; --money:#0C8599; --money-soft:#E0F3F6;
-  --good:#2B8A3E; --warn:#E8590C; --crit:#C92A2A;
-  --est:#8A8C95;
-  --shadow:0 1px 2px rgba(23,24,28,.05), 0 6px 20px -12px rgba(23,24,28,.18);
+  --paper:#FCFBFA; --surface:#FFFFFF; --sunk:#F5F3F0; --ink:#16171B; --ink-2:#5B5D66;
+  --ink-3:#9295A0; --line:#E8E5E0; --line-2:#D5D1CA;
+  --heat:#C2255C; --heat-soft:#FBE4EC; --money:#0B7C8E; --money-soft:#E2F2F4;
+  --good:#2B8A3E; --crit:#C92A2A;
 }
 :root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
-  --paper:#131418; --surface:#1A1C21; --surface-2:#22252B; --ink:#ECEAE6; --ink-2:#A8AAB3;
-  --ink-3:#71747D; --line:#2C2F36; --line-2:#3C404A;
-  --heat:#F06595; --heat-soft:#38141F; --money:#3BC9DB; --money-soft:#0E2E33;
-  --good:#51CF66; --warn:#FF922B; --crit:#FF6B6B; --est:#71747D;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px -12px rgba(0,0,0,.6);
+  --paper:#111216; --surface:#181A1E; --sunk:#1F2126; --ink:#EDEBE7; --ink-2:#A5A8B0;
+  --ink-3:#6E717A; --line:#272A30; --line-2:#383C44;
+  --heat:#F06595; --heat-soft:#34131E; --money:#3BC9DB; --money-soft:#0D2B30;
+  --good:#51CF66; --crit:#FF6B6B;
 }}
 :root[data-theme="dark"]{
-  --paper:#131418; --surface:#1A1C21; --surface-2:#22252B; --ink:#ECEAE6; --ink-2:#A8AAB3;
-  --ink-3:#71747D; --line:#2C2F36; --line-2:#3C404A;
-  --heat:#F06595; --heat-soft:#38141F; --money:#3BC9DB; --money-soft:#0E2E33;
-  --good:#51CF66; --warn:#FF922B; --crit:#FF6B6B; --est:#71747D;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px -12px rgba(0,0,0,.6);
+  --paper:#111216; --surface:#181A1E; --sunk:#1F2126; --ink:#EDEBE7; --ink-2:#A5A8B0;
+  --ink-3:#6E717A; --line:#272A30; --line-2:#383C44;
+  --heat:#F06595; --heat-soft:#34131E; --money:#3BC9DB; --money-soft:#0D2B30;
+  --good:#51CF66; --crit:#FF6B6B;
 }
 *{box-sizing:border-box}
-body{
-  margin:0; background:var(--paper); color:var(--ink);
+body{margin:0; background:var(--paper); color:var(--ink);
   font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased;
-}
-.wrap{max-width:1240px; margin:0 auto; padding-inline:16px; padding-block:0 56px}
-h1,h2,h3{font-family:"Bricolage Grotesque","Public Sans",sans-serif; text-wrap:balance; margin:0}
-.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums}
-.num{font-variant-numeric:tabular-nums}
+  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px; margin:0 auto; padding-inline:20px; padding-block:0 64px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums}
+a{color:inherit}
 
-/* ---- başlık ---- */
-header.top{
-  position:sticky; top:env(safe-area-inset-top,0px); z-index:30;
-  background:color-mix(in srgb, var(--paper) 88%, transparent);
-  backdrop-filter:blur(12px); border-bottom:1px solid var(--line);
-}
-.top-inner{max-width:1240px; margin:0 auto; padding-inline:16px; padding-block:12px;
-  display:flex; flex-wrap:wrap; gap:12px 20px; align-items:baseline}
-.brand{font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:20px; letter-spacing:-.02em}
-.brand .dot{color:var(--heat)}
-.top-meta{display:flex; flex-wrap:wrap; gap:6px 16px; margin-left:auto; color:var(--ink-2); font-size:12px}
-.top-meta b{color:var(--ink); font-weight:600}
+/* başlık */
+header{position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
+  background:color-mix(in srgb, var(--paper) 85%, transparent); backdrop-filter:blur(14px)}
+.hd{max-width:1180px; margin:0 auto; padding:16px 20px 14px;
+  display:flex; flex-wrap:wrap; gap:8px 22px; align-items:baseline}
+.brand{font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:19px; letter-spacing:-.025em}
+.brand i{color:var(--heat); font-style:normal}
+.hd .meta{margin-left:auto; color:var(--ink-3); font-size:12.5px;
+  display:flex; flex-wrap:wrap; gap:4px 18px}
+.hd .meta b{color:var(--ink-2); font-weight:500}
 
-/* ---- özet şeridi ---- */
-/* Grid değil flex: auto-fit grid, hücreler tam sığmadığında arkada boş gri bir
-   kutu bırakıyordu. Flex sarmalamada böyle bir artık hücre oluşmuyor. */
-.summary{display:flex; flex-wrap:wrap; background:var(--surface);
-  border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-block:20px}
-.sum{flex:1 1 150px; padding:12px 14px; display:flex; flex-direction:column; gap:2px;
-  border-right:1px solid var(--line); border-top:1px solid var(--line); margin-top:-1px}
-.sum:last-child{border-right:0}
-.sum .k{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3)}
-.sum .v{font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:24px; line-height:1.1;
-  font-variant-numeric:tabular-nums}
-.sum .s{font-size:11px; color:var(--ink-3)}
-.sum.heat .v{color:var(--heat)}
-.sum.money .v{color:var(--money)}
+/* istatistik şeridi — kutu yok, sadece boşluk ve tipografi */
+.stats{display:flex; flex-wrap:wrap; gap:26px 40px; padding:22px 0 24px;
+  border-bottom:1px solid var(--line)}
+.stat .n{font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:27px;
+  line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px; color:var(--ink-3); margin-top:5px}
+.stat.heat .n{color:var(--heat)}
+.stat.money .n{color:var(--money)}
 
-/* ---- kontroller ---- */
-.controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px}
-.tabs{display:flex; gap:2px; background:var(--surface-2); border-radius:9px; padding:3px; border:1px solid var(--line)}
-.tab{appearance:none; border:0; background:transparent; color:var(--ink-2); font:inherit; font-weight:600;
-  font-size:13px; padding:6px 13px; border-radius:7px; cursor:pointer; white-space:nowrap}
-.tab[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow)}
-.tab:focus-visible,.chip:focus-visible,.row:focus-visible,select:focus-visible,input:focus-visible{
-  outline:2px solid var(--heat); outline-offset:2px}
-input[type="search"]{
-  font:inherit; padding:7px 11px; border:1px solid var(--line-2); border-radius:8px;
-  background:var(--surface); color:var(--ink); min-width:170px; flex:1 1 170px; max-width:280px}
-select{font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--line-2); border-radius:8px;
-  background:var(--surface); color:var(--ink)}
-.chip{appearance:none; font:inherit; font-size:12px; font-weight:600; padding:5px 10px; border-radius:20px;
-  border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2); cursor:pointer}
+/* kontroller */
+.bar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:20px 0 14px}
+.tabs{display:flex; gap:1px}
+.tab{appearance:none; border:0; background:transparent; color:var(--ink-3); font:inherit;
+  font-weight:500; font-size:13.5px; padding:6px 12px; border-radius:7px; cursor:pointer}
+.tab:hover{color:var(--ink-2)}
+.tab[aria-selected="true"]{background:var(--ink); color:var(--paper)}
+input[type="search"], select{font:inherit; font-size:13.5px; color:var(--ink);
+  background:var(--surface); border:1px solid var(--line-2); border-radius:8px; padding:7px 10px}
+input[type="search"]{flex:1 1 180px; max-width:260px}
+.chip{appearance:none; font:inherit; font-size:13px; font-weight:500; padding:6px 12px;
+  border-radius:8px; border:1px solid var(--line-2); background:var(--surface);
+  color:var(--ink-3); cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+:is(.tab,.chip,input,select,.row,.store):focus-visible{outline:2px solid var(--heat); outline-offset:2px}
 
-/* ---- tablo ---- */
-.list{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface);
-  container-type:inline-size}
-.head,.row{display:grid; align-items:center;
-  grid-template-columns:44px 1fr 118px 104px 104px 96px 60px;
-  gap:12px; padding:10px 14px}
-/* Yapışkan DEĞİL: .list üzerindeki overflow:hidden ile birlikte sticky, ilk satırı
-   başlığın altında bırakıyordu. Sıralı listede 1. satırın gizlenmesi kabul edilemez. */
-.head{background:var(--surface-2); border-bottom:1px solid var(--line);
-  font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600}
-.head .r{text-align:right}
-.row{border-bottom:1px solid var(--line); cursor:pointer; background:transparent; width:100%;
-  text-align:left; font:inherit; color:inherit; border-left:0; border-right:0; border-top:0}
-.row:last-of-type{border-bottom:0}
-.row:hover{background:var(--surface-2)}
-.rank{font-family:"IBM Plex Mono",monospace; font-size:15px; font-weight:600; color:var(--ink-3);
+/* tablo — çerçeve yok, ince ayraçlar */
+.list{container-type:inline-size}
+.hrow,.row{display:grid; grid-template-columns:34px minmax(0,1fr) 112px 92px 108px 86px 44px;
+  gap:14px; align-items:center; padding:11px 8px}
+.hrow{font-size:11px; color:var(--ink-3); padding-block:8px; border-bottom:1px solid var(--line)}
+.row{border-bottom:1px solid var(--line); cursor:pointer; width:100%; text-align:left;
+  font:inherit; color:inherit; background:none; border-left:0; border-right:0; border-top:0}
+.row:hover{background:var(--sunk)}
+.row.open{background:var(--sunk)}
+.rank{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-3);
   font-variant-numeric:tabular-nums}
-.rank.top{color:var(--heat)}
-.game{display:flex; gap:11px; align-items:center; min-width:0}
-.tile{width:40px; height:40px; border-radius:11px; flex:none; display:grid; place-items:center;
-  font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:14px; letter-spacing:-.02em;
-  background:hsl(var(--h) 62% 93%); color:hsl(var(--h) 58% 32%);
-  border:1px solid hsl(var(--h) 45% 84%)}
+.row.open .rank, .rank.podium{color:var(--heat)}
+
+.g{display:flex; gap:11px; align-items:center; min-width:0}
+.tile{width:34px; height:34px; border-radius:9px; flex:none; display:grid; place-items:center;
+  font-family:"Bricolage Grotesque",sans-serif; font-weight:600; font-size:12.5px;
+  background:hsl(var(--h) 55% 94%); color:hsl(var(--h) 45% 34%)}
 :root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
-  .tile{background:hsl(var(--h) 34% 20%); color:hsl(var(--h) 70% 76%); border-color:hsl(var(--h) 30% 30%)}
+  .tile{background:hsl(var(--h) 28% 19%); color:hsl(var(--h) 60% 72%)}
 }}
-:root[data-theme="dark"] .tile{background:hsl(var(--h) 34% 20%); color:hsl(var(--h) 70% 76%);
-  border-color:hsl(var(--h) 30% 30%)}
-.game .t{min-width:0}
-.game .name{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.game .sub{font-size:11.5px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  display:flex; gap:6px; align-items:center}
-.pf{font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:600; padding:1px 4px; border-radius:4px;
-  border:1px solid var(--line-2); color:var(--ink-2); letter-spacing:.03em}
-.pf.a{border-color:var(--money); color:var(--money)}
+:root[data-theme="dark"] .tile{background:hsl(var(--h) 28% 19%); color:hsl(var(--h) 60% 72%)}
+.g .txt{min-width:0}
+.g .nm{font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.3}
+.g .sub{font-size:12px; color:var(--ink-3); display:flex; gap:7px; align-items:center;
+  min-width:0; line-height:1.4}
+.g .pub{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.store{font-size:11px; font-weight:500; text-decoration:none; color:var(--ink-3);
+  white-space:nowrap; border-bottom:1px solid var(--line-2); padding-bottom:1px}
+.store:hover{color:var(--heat); border-color:var(--heat)}
+.store.play:hover{color:var(--money); border-color:var(--money)}
 
-/* hype ölçer */
-.hype{display:flex; align-items:center; gap:8px}
-.hype .v{font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:17px; width:30px;
-  font-variant-numeric:tabular-nums}
-.bar{flex:1; height:5px; border-radius:3px; background:var(--surface-2); overflow:hidden; min-width:24px}
-.bar i{display:block; height:100%; border-radius:3px; background:var(--heat)}
+.hp{display:flex; align-items:center; gap:9px}
+.hp .v{font-family:"Bricolage Grotesque",sans-serif; font-weight:600; font-size:16px;
+  width:24px; font-variant-numeric:tabular-nums}
+.hp .track{flex:1; height:3px; border-radius:2px; background:var(--line); min-width:20px}
+.hp .track i{display:block; height:100%; border-radius:2px; background:var(--heat)}
 
-.tier{font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:5px; white-space:nowrap;
-  text-transform:uppercase; letter-spacing:.04em; display:inline-block}
-.tier.breakout{background:var(--heat-soft); color:var(--heat)}
-.tier.rising{background:var(--money-soft); color:var(--money)}
-.tier.established{background:var(--surface-2); color:var(--ink-2); border:1px solid var(--line-2)}
-.tier.watch{background:transparent; color:var(--ink-3); border:1px solid var(--line)}
+.tag{font-size:11.5px; font-weight:500; white-space:nowrap}
+.tag.breakout{color:var(--heat)}
+.tag.rising{color:var(--money)}
+.tag.established{color:var(--ink-2)}
+.tag.watch{color:var(--ink-3)}
 
 .cell{font-size:13px; font-variant-numeric:tabular-nums}
-.cell .lbl{display:none}
-.est{border-bottom:1px dashed var(--est); color:var(--ink-2)}
-.per{font-size:9.5px; color:var(--ink-3); letter-spacing:.02em; margin-left:1px}
-.mo{display:block; font-size:11.5px; color:var(--ink-3); margin-top:1px}
-.measured{font-weight:600}
-.delta{font-size:11px; font-variant-numeric:tabular-nums}
-.delta.up{color:var(--good)} .delta.down{color:var(--crit)} .delta.flat{color:var(--ink-3)}
+.cell .k{display:none}
+.est{color:var(--ink-2)}
+.est::before{content:"≈"; color:var(--ink-3); margin-right:1px}
+.sub2{display:block; font-size:11.5px; color:var(--ink-3); margin-top:1px}
+.up{color:var(--good); font-size:11.5px}
 .r{text-align:right}
 
-/* ---- yan panel: liste sola daralır, detay sağdan açılır ----
-   (ai-radar ile aynı kalıp; oradaki iframe yerine kendi detayımız var çünkü
-   App Store ve Play sayfaları gömülmeye izin vermiyor) */
-.shell{display:grid; grid-template-columns:minmax(0,1fr) 0fr;
-  transition:grid-template-columns .42s cubic-bezier(.32,.72,0,1); min-height:100vh}
-.shell.open{grid-template-columns:minmax(0,54fr) minmax(0,46fr)}
-.pane{position:sticky; top:env(safe-area-inset-top,0px); height:100vh; overflow:hidden;
-  border-left:1px solid var(--line); background:var(--surface);
-  display:flex; flex-direction:column;
-  opacity:0; transform:translateX(24px);
-  transition:opacity .3s ease .08s, transform .42s cubic-bezier(.32,.72,0,1)}
-.shell.open .pane{opacity:1; transform:none}
-.pane[hidden]{display:none}
-.pane-bar{display:flex; align-items:center; gap:8px; padding:12px 14px;
-  border-bottom:1px solid var(--line); flex:none; min-height:56px}
-.pane-bar .who{flex:1; min-width:0}
-.pane-bar .who b{display:block; font-size:14px; font-weight:600;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.pane-bar .who span{font-size:11.5px; color:var(--ink-3)}
-.pane-bar button{font:inherit; font-size:14px; line-height:1; cursor:pointer;
-  background:transparent; border:1px solid var(--line-2); color:var(--ink-2);
-  border-radius:8px; padding:7px 10px; flex:none}
-.pane-bar button:hover{color:var(--heat); border-color:var(--heat)}
-.pane-bar button:disabled{opacity:.35; cursor:default}
-.pane-body{flex:1; overflow:auto; padding:18px 18px 40px}
-.pane-hero{display:flex; gap:12px; align-items:center; margin-bottom:16px}
-.pane-hero .t{min-width:0}
-.pane-hero .name{font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:19px;
-  letter-spacing:-.01em; line-height:1.2}
-.pane-hero .pub{font-size:12.5px; color:var(--ink-3)}
-.pane-score{display:flex; gap:10px; align-items:center; margin-bottom:18px}
-.pane-score .big{font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:34px;
-  line-height:1; color:var(--heat); font-variant-numeric:tabular-nums}
-.pane-kpi{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1px;
-  background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:18px}
-.pane-kpi div{background:var(--surface); padding:10px 12px}
-.pane-kpi .k{font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3)}
-.pane-kpi .v{font-weight:600; font-size:15px; font-variant-numeric:tabular-nums; margin-top:2px}
+/* satır altı detay */
+.det{border-bottom:1px solid var(--line); background:var(--sunk);
+  padding:20px 8px 24px; display:grid; gap:28px;
+  grid-template-columns:minmax(240px,1fr) minmax(260px,1fr) minmax(200px,.8fr)}
+.det h4{margin:0 0 11px; font-size:12px; font-weight:600; color:var(--ink-3)}
+.comp{display:grid; grid-template-columns:auto 1fr 30px; gap:7px 10px; align-items:center; font-size:12.5px}
+.comp .track{height:3px; border-radius:2px; background:var(--line-2)}
+.comp .track i{display:block; height:100%; border-radius:2px; background:var(--ink-2)}
+.comp .n{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-3); text-align:right}
+.comp .na{font-size:11px; color:var(--ink-3); text-align:right}
+.kv{width:100%; border-collapse:collapse; font-size:12.5px}
+.kv td{padding:5px 0; border-bottom:1px solid var(--line)}
+.kv td:last-child{text-align:right; font-variant-numeric:tabular-nums}
+.kv tr:last-child td{border-bottom:0}
+.kv .miss{color:var(--ink-3)}
+.ranks{width:100%; border-collapse:collapse; font-size:12.5px}
+.ranks th{font-size:11px; font-weight:500; color:var(--ink-3); text-align:right; padding:0 0 6px}
+.ranks th:first-child{text-align:left}
+.ranks td{padding:4px 0; text-align:right; font-variant-numeric:tabular-nums;
+  border-bottom:1px solid var(--line)}
+.ranks td:first-child{text-align:left}
+.ranks tr:last-child td{border-bottom:0}
+.ranks .miss{color:var(--ink-3)}
+.links{display:flex; gap:14px; margin-top:14px}
+.links a{font-size:12.5px; font-weight:500; text-decoration:none; color:var(--heat)}
+.links a:hover{text-decoration:underline}
 
-/* mağaza kartları — panelin asıl işi */
-.storecards{display:grid; gap:10px}
-.storecard{display:flex; flex-direction:column; gap:3px; padding:14px 16px; border-radius:12px;
-  border:1px solid var(--line-2); text-decoration:none; color:inherit; background:var(--surface)}
-.storecard b{font-size:15px; font-weight:600}
-.storecard span{font-size:12.5px; color:var(--ink-3)}
-.storecard .go{color:var(--ink-3); font-weight:400}
-.storecard.ios:hover{border-color:var(--heat)}
-.storecard.ios:hover b, .storecard.ios:hover .go{color:var(--heat)}
-.storecard.play{border-color:color-mix(in srgb, var(--money) 40%, var(--line-2))}
-.storecard.play b{color:var(--money)}
-.storecard.play:hover{border-color:var(--money); background:var(--money-soft)}
-.storecard.off{opacity:.55; border-style:dashed}
-.pane-note{font-size:12px; line-height:1.6; color:var(--ink-3); background:var(--surface-2);
-  border-radius:10px; padding:11px 13px; margin-top:20px}
-.pane-note code{font-family:"IBM Plex Mono",monospace; font-size:11px}
+/* yöntem */
+.method{margin-top:36px; border-top:1px solid var(--line); padding-top:18px}
+.method summary{cursor:pointer; font-weight:600; font-size:14px; color:var(--ink-2)}
+.method summary:hover{color:var(--ink)}
+.method .body{margin-top:16px; display:grid; gap:26px;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); color:var(--ink-2); font-size:13px}
+.method h5{margin:0 0 7px; font-size:12px; font-weight:600; color:var(--ink-3)}
+.method ul{margin:0; padding-left:16px} .method li{margin-bottom:4px}
+.method code{font-family:"IBM Plex Mono",monospace; font-size:11.5px}
+.empty{padding:44px 8px; text-align:center; color:var(--ink-3)}
+footer{margin-top:28px; color:var(--ink-3); font-size:12px}
 
-/* satır içi mağaza butonları */
-.stores{display:inline-flex; gap:5px; margin-left:2px}
-.store{font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:600; letter-spacing:.03em;
-  padding:2px 6px; border-radius:5px; text-decoration:none; white-space:nowrap;
-  border:1px solid var(--line-2); color:var(--ink-2); background:var(--surface)}
-.store:hover{border-color:var(--heat); color:var(--heat)}
-.store.play{border-color:color-mix(in srgb, var(--money) 45%, var(--line-2)); color:var(--money)}
-.store.play:hover{border-color:var(--money)}
-.row.active{background:var(--surface-2)}
-.row.active .rank{color:var(--heat)}
-
-/* ---- açılır detay ---- */
-.detail{grid-column:1/-1; padding:0; border-bottom:1px solid var(--line); background:var(--surface-2)}
-.detail-in{padding:16px 14px; display:grid; gap:18px; grid-template-columns:minmax(240px,1fr) minmax(260px,1.3fr)}
-.detail h3{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); margin-bottom:9px;
-  font-weight:700}
-.comp{display:grid; grid-template-columns:auto 1fr auto; gap:5px 10px; align-items:center; font-size:12px}
-.comp .cbar{height:4px; border-radius:2px; background:var(--line); overflow:hidden}
-.comp .cbar i{display:block; height:100%; background:var(--ink-2)}
-.comp .cv{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3)}
-.comp .na{color:var(--ink-3); font-style:italic; font-size:11px}
-.ctable{width:100%; border-collapse:collapse; font-size:12px}
-.ctable th,.ctable td{padding:3px 8px 3px 0; text-align:right; font-variant-numeric:tabular-nums}
-.ctable th:first-child,.ctable td:first-child{text-align:left}
-.ctable thead th{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3);
-  border-bottom:1px solid var(--line-2); font-weight:600}
-.ctable td{border-bottom:1px solid var(--line)}
-.ctable .miss{color:var(--ink-3)}
-.links{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
-.links a{font-size:12px; font-weight:600; color:var(--heat); text-decoration:none;
-  border:1px solid var(--line-2); padding:4px 10px; border-radius:7px}
-.links a:hover{border-color:var(--heat)}
-
-/* ---- yöntem ---- */
-.method{margin-top:26px; border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:16px 18px}
-.method summary{cursor:pointer; font-weight:700; font-family:"Bricolage Grotesque",sans-serif; font-size:15px}
-.method .body{margin-top:12px; display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  color:var(--ink-2); font-size:13px}
-.method h4{margin:0 0 5px; font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3)}
-.method ul{margin:0; padding-left:17px} .method li{margin-bottom:3px}
-.method code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:var(--surface-2);
-  padding:1px 4px; border-radius:4px}
-.empty{padding:40px 16px; text-align:center; color:var(--ink-3)}
-footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
-
-/* Satır düzeni ekran genişliğine değil LİSTENİN genişliğine bağlı: yan panel
-   açılınca liste daralıyor ve sabit sütunlar sığmıyordu (oyun adı ~80px'e
-   sıkışıp mağaza butonları görünmez oluyordu). Container query ile hem panel
-   açık hâli hem telefon aynı kuralla çözülüyor. */
 @container (max-width:720px){
-  .head{display:none}
-  /* Grid alanı DEĞİL flex: aynı grid alanına konan öğeler yan yana değil üst üste
-     biniyor (indirme, gelir, kademe ve ülke iç içe geçiyordu). Flex sarmalama
-     hepsini akış içinde tutuyor. */
-  .row{display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; padding:12px 14px}
-  .row .rank{flex:0 0 28px}
-  .row .game{flex:1 1 220px; min-width:0}
-  .row .c-hype{flex:1 0 100%; max-width:220px}
-  .row .c-dl,.row .c-rev,.row .c-tier,.row .c-cty{flex:0 0 auto}
-  .mo{display:inline; margin-left:6px}
-  .cell .lbl{display:inline; font-size:10px; text-transform:uppercase; letter-spacing:.06em;
-    color:var(--ink-3); margin-right:4px}
+  .hrow{display:none}
+  .row{display:flex; flex-wrap:wrap; align-items:center; gap:5px 14px; padding:13px 8px}
+  .row .rank{flex:0 0 22px}
+  .row .g{flex:1 1 200px}
+  .row .c-hp{flex:1 0 100%; max-width:200px}
+  .row .c-dl,.row .c-rev,.row .c-tag,.row .c-cty{flex:0 0 auto}
+  .cell .k{display:inline; font-size:11px; color:var(--ink-3); margin-right:4px}
+  .sub2{display:inline; margin-left:6px}
   .r{text-align:left}
 }
-@media (max-width:860px){
-  .shell, .shell.open{grid-template-columns:minmax(0,1fr)}
-  .shell.open .pane{position:fixed; inset:0; height:100dvh; z-index:60; border-left:0;
-    padding-top:env(safe-area-inset-top,0px)}
-  .detail-in{grid-template-columns:1fr}
-}
-@media (prefers-reduced-motion:reduce){.shell{transition:none}}
+@media (max-width:760px){ .det{grid-template-columns:1fr} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 
-<header class="top">
-  <div class="top-inner">
-    <div class="brand">Hype Radar<span class="dot">.</span></div>
-    <div class="top-meta" id="topMeta"></div>
+<header>
+  <div class="hd">
+    <div class="brand">Hype Radar<i>.</i></div>
+    <div class="meta" id="meta"></div>
   </div>
 </header>
 
-<div class="shell" id="shell">
 <div class="wrap">
-  <div class="summary" id="summary"></div>
+  <div class="stats" id="stats"></div>
 
-  <div class="controls">
+  <div class="bar">
     <div class="tabs" role="tablist" id="tabs">
       <button class="tab" role="tab" data-view="hype" aria-selected="true">Hype radar</button>
       <button class="tab" role="tab" data-view="breakout" aria-selected="false">Patlayanlar</button>
-      <button class="tab" role="tab" data-view="grossing" aria-selected="false">Şu an zirvede</button>
+      <button class="tab" role="tab" data-view="grossing" aria-selected="false">Zirvedekiler</button>
       <button class="tab" role="tab" data-view="new" aria-selected="false">Yeni çıkanlar</button>
     </div>
-    <input type="search" id="q" placeholder="Oyun veya yayıncı ara" aria-label="Oyun veya yayıncı ara">
+    <input type="search" id="q" placeholder="Oyun veya yayıncı" aria-label="Oyun veya yayıncı ara">
     <select id="country" aria-label="Ülke"></select>
     <button class="chip" id="fIos" aria-pressed="false">iOS</button>
     <button class="chip" id="fAnd" aria-pressed="false">Android</button>
     <select id="sort" aria-label="Sıralama">
-      <option value="hype">Hype skoruna göre</option>
-      <option value="downloads">İndirmeye göre</option>
-      <option value="revenue">Gelire göre</option>
-      <option value="new">En yeniye göre</option>
-      <option value="gross">Grossing sırasına göre</option>
+      <option value="hype">Hype skoru</option>
+      <option value="downloads">İndirme</option>
+      <option value="revenue">Gelir</option>
+      <option value="new">En yeni</option>
+      <option value="gross">Hasılat sırası</option>
     </select>
   </div>
 
@@ -310,422 +208,282 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
   <footer id="foot"></footer>
 </div>
 
-<aside class="pane" id="pane" hidden aria-label="Oyun detayı">
-  <div class="pane-bar">
-    <button id="pane-close" title="Kapat (Esc)" aria-label="Kapat">✕</button>
-    <div class="who"><b id="pane-title"></b><span id="pane-sub"></span></div>
-    <button id="pane-prev" title="Önceki oyun (←)" aria-label="Önceki oyun">‹</button>
-    <button id="pane-next" title="Sonraki oyun (→)" aria-label="Sonraki oyun">›</button>
-  </div>
-  <div class="pane-body" id="pane-body"></div>
-</aside>
-</div>
-
 <script type="application/json" id="radar-data">__RADAR_DATA__</script>
 <script>
 (() => {
   const DATA = JSON.parse(document.getElementById('radar-data').textContent);
   const G = DATA.games;
+  const MONTH = 30.44;
 
-  const COMPONENT_LABELS = {
-    rankMomentum:  ['Sıra ivmesi', 'Pencere içinde chart sırasındaki log-ölçekli hareket'],
-    downloadVelocity:['İndirme hızı', 'Pencere içinde günlük indirme/rating artışı'],
-    lifetimeVelocity:['Yaşam boyu hız', 'Çıkıştan bu yana günlük ortalama indirme'],
-    breadth:       ['Ülke yayılımı', 'Kaç ülkede, ne ağırlıkta chart’ta'],
-    newEntry:      ['Yeni giriş', 'Chart’a bu turda ilk kez girdiği ülke oranı'],
-    monetization:  ['Para kazanma', 'Grossing sırasının free sırasına üstünlüğü'],
-    youth:         ['Yaş', 'Çıkışından bu yana geçen süre (yeni = yüksek)'],
+  const COMPONENTS = {
+    rankMomentum:     ['Sıra ivmesi', 'Pencere içinde chart sırasındaki log-ölçekli hareket'],
+    downloadVelocity: ['İndirme hızı', 'Pencere içinde günlük indirme/değerlendirme artışı'],
+    lifetimeVelocity: ['Yaşam boyu hız', 'Çıkıştan bu yana günlük ortalama indirme'],
+    breadth:          ['Ülke yayılımı', 'Kaç ülkede, hangi pazar ağırlığıyla chart’ta'],
+    newEntry:         ['Yeni giriş', 'Chart’a bu turda ilk kez girdiği ülke oranı'],
+    monetization:     ['Para kazanma', 'Hasılat sırasının ücretsiz sırasına üstünlüğü'],
+    youth:            ['Yaş', 'Çıkışından bu yana geçen süre'],
   };
-  const TIER_LABELS = { breakout:'Patlama', rising:'Yükselen', established:'Zirve', watch:'İzlemede' };
-  const CTY = Object.fromEntries(DATA.countries.map(c => [c.code, c.label]));
+  const TIERS = { breakout:'Patlama', rising:'Yükselen', established:'Zirve', watch:'İzlemede' };
 
   const nf = new Intl.NumberFormat('tr-TR');
-  // Gösterim: $ bazında B / M / k. Sektörde (AppMagic, Sensor Tower) kullanılan
-  // biçim bu; ondalık ayırıcı da o yüzden nokta.
-  const MONTH_DAYS = 30.44;
-  const fmtCompact = (n) => {
+  const num = (n) => {
     if (n === null || n === undefined) return null;
     if (n >= 1e9) return (n/1e9).toFixed(n>=1e10?0:1) + 'B';
     if (n >= 1e6) return (n/1e6).toFixed(n>=1e7?0:1) + 'M';
     if (n >= 1e3) return Math.round(n/1e3) + 'k';
     return nf.format(n);
   };
-  const fmtMoney = (n) => {
+  const usd = (n) => {
     if (!n) return null;
     if (n >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
     if (n >= 1e6) return '$' + (n/1e6).toFixed(n>=1e8?0:1) + 'M';
     if (n >= 1e3) return '$' + Math.round(n/1e3) + 'k';
     return '$' + Math.round(n);
   };
-  // Artifact CSP dış görselleri engelliyor; mağaza ikonu yerine başlıktan
-  // deterministik renkli karo üretiyoruz (aynı oyun her zaman aynı rengi alır).
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // Mağaza ikonları CSP'den geçmiyor; başlıktan deterministik renkli karo üretiyoruz.
   const tile = (title) => {
     const t = String(title ?? '?');
     let h = 0;
     for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
-    const hue = h % 360;
-    const initials = t.replace(/[^\p{L}\p{N} ]/gu, ' ').trim().split(/\s+/)
+    const ini = t.replace(/[^\p{L}\p{N} ]/gu, ' ').trim().split(/\s+/)
       .slice(0, 2).map((w) => w[0]).join('').toLocaleUpperCase('tr') || '?';
-    return `<span class="tile" aria-hidden="true" style="--h:${hue}">${esc(initials)}</span>`;
+    return `<span class="tile" aria-hidden="true" style="--h:${h % 360}">${esc(ini)}</span>`;
   };
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
-    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-  // ---- durum ----
   const state = { view:'hype', q:'', country:'', ios:false, android:false, sort:'hype', open:null };
   try {
-    const saved = JSON.parse(localStorage.getItem('hypeRadar.view') || '{}');
-    Object.assign(state, { view:saved.view ?? state.view, country:saved.country ?? '', sort:saved.sort ?? 'hype' });
+    const s = JSON.parse(localStorage.getItem('hypeRadar') || '{}');
+    Object.assign(state, { view:s.view ?? 'hype', country:s.country ?? '', sort:s.sort ?? 'hype' });
   } catch {}
-  const persist = () => { try {
-    localStorage.setItem('hypeRadar.view', JSON.stringify({view:state.view, country:state.country, sort:state.sort}));
+  const save = () => { try {
+    localStorage.setItem('hypeRadar', JSON.stringify({ view:state.view, country:state.country, sort:state.sort }));
   } catch {} };
 
-  // ---- üst bilgi ----
-  const dt = new Date(DATA.takenAt);
-  const fmtDate = new Intl.DateTimeFormat('tr-TR', {day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'});
-  document.getElementById('topMeta').innerHTML = [
-    `Son tarama <b>${esc(fmtDate.format(dt))}</b>`,
-    DATA.coldStart
-      ? `<b>ilk tarama</b> — ivme sinyalleri sonraki turda açılıyor`
-      : `Karşılaştırma penceresi <b>${String(DATA.windowDays).replace('.',',')} gün</b>`,
-    `<b>${DATA.totalGames ?? DATA.counts.games}</b> oyun tarandı · <b>${DATA.countries.length}</b> ülke · 2 mağaza`,
-  ].join('<span style="color:var(--line-2)">|</span>');
+  // --- üst bilgi ---
+  const when = new Intl.DateTimeFormat('tr-TR', { day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' });
+  document.getElementById('meta').innerHTML = [
+    `<b>${esc(when.format(new Date(DATA.takenAt)))}</b> taraması`,
+    DATA.coldStart ? 'ivme sinyalleri sonraki turda'
+                   : `<b>${String(DATA.windowDays).replace('.', ',')} gün</b>lük pencere`,
+    `<b>${DATA.totalGames ?? DATA.counts.games}</b> oyun · <b>${DATA.countries.length}</b> ülke · 2 mağaza`,
+  ].join('<span aria-hidden="true" style="color:var(--line-2)">/</span>');
 
-  // ---- özet ----
-  // Sayılar tam taramadan gelir (gömülü liste yalnız üst kısım).
+  // --- istatistikler ---
   const S = DATA.summary ?? {};
-  const tierCount = (t) => S[t] ?? G.filter(g => g.tier === t).length;
-  const topRev = S.revenueDaily ?? G.reduce((s,g) => s + (g.revenueDailyEstimate || 0), 0);
-  const measuredDl = S.measuredInstalls ?? G.reduce((s,g) => s + (g.downloads.androidTotal || 0), 0);
-  document.getElementById('summary').innerHTML = `
-    <div class="sum heat"><span class="k">Patlama</span><span class="v">${tierCount('breakout')}</span>
-      <span class="s">genç + yüksek ivme</span></div>
-    <div class="sum"><span class="k">Yükselen</span><span class="v">${tierCount('rising')}</span>
-      <span class="s">hype ≥ 45</span></div>
-    <div class="sum"><span class="k">Zirve</span><span class="v">${tierCount('established')}</span>
-      <span class="s">grossing ilk 20</span></div>
-    <div class="sum"><span class="k">Çapraz platform</span><span class="v">${DATA.counts.crossPlatform}</span>
-      <span class="s">iOS + Android eşleşti</span></div>
-    <div class="sum money"><span class="k">Takip edilen net IAP</span><span class="v">${fmtMoney(topRev * MONTH_DAYS) ?? '—'}</span>
-      <span class="s">${fmtMoney(topRev) ?? '—'} / gün · tahmin</span></div>
-    <div class="sum"><span class="k">Ölçülen kurulum</span><span class="v">${fmtCompact(measuredDl) ?? '—'}</span>
-      <span class="s">Play, kümülatif</span></div>`;
+  const stat = (n, l, cls = '') => `<div class="stat ${cls}"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  document.getElementById('stats').innerHTML =
+    stat(S.breakout ?? 0, 'patlama', 'heat') +
+    stat(S.rising ?? 0, 'yükselen') +
+    stat(S.established ?? 0, 'zirvede') +
+    stat(S.crossPlatform ?? 0, 'iki mağazada') +
+    stat(usd((S.revenueDaily ?? 0) * MONTH) ?? '—', 'aylık net IAP · tahmin', 'money') +
+    stat(num(S.measuredInstalls ?? 0) ?? '—', 'ölçülen kurulum');
 
-  // ---- ülke seçici ----
   const cSel = document.getElementById('country');
   cSel.innerHTML = '<option value="">Tüm ülkeler</option>' +
-    DATA.countries.map(c => `<option value="${c.code}">${esc(c.label)}</option>`).join('');
+    DATA.countries.map((c) => `<option value="${c.code}">${esc(c.label)}</option>`).join('');
   cSel.value = state.country;
   document.getElementById('sort').value = state.sort;
 
-  // ---- filtre + sıralama ----
+  // --- filtre ---
+  const byGross = (a, b) => (a.bestGross ?? 1e9) - (b.bestGross ?? 1e9);
   function visible() {
-    let rows = G.slice();
-    if (state.view === 'breakout') rows = rows.filter(g => g.tier === 'breakout');
-    if (state.view === 'grossing') rows = rows.filter(g => g.bestGross !== null);
-    if (state.view === 'new') rows = rows.filter(g => g.ageDays !== null && g.ageDays <= 120);
-    if (state.country) rows = rows.filter(g => g.ranks[state.country]);
-    if (state.ios) rows = rows.filter(g => g.platforms.ios);
-    if (state.android) rows = rows.filter(g => g.platforms.android);
+    let r = G.slice();
+    if (state.view === 'breakout') r = r.filter((g) => g.tier === 'breakout');
+    if (state.view === 'grossing') r = r.filter((g) => g.bestGross !== null);
+    if (state.view === 'new') r = r.filter((g) => g.ageDays !== null && g.ageDays <= 120);
+    if (state.country) r = r.filter((g) => g.ranks[state.country]);
+    if (state.ios) r = r.filter((g) => g.platforms.ios);
+    if (state.android) r = r.filter((g) => g.platforms.android);
     if (state.q) {
       const q = state.q.toLocaleLowerCase('tr');
-      rows = rows.filter(g => (g.title||'').toLocaleLowerCase('tr').includes(q) ||
-                              (g.publisher||'').toLocaleLowerCase('tr').includes(q));
+      r = r.filter((g) => (g.title || '').toLocaleLowerCase('tr').includes(q) ||
+                          (g.publisher || '').toLocaleLowerCase('tr').includes(q));
     }
     const cmp = {
-      hype:      (a,b) => b.hype - a.hype,
-      downloads: (a,b) => (b.downloads.total||0) - (a.downloads.total||0),
-      revenue:   (a,b) => (b.revenueDailyEstimate||0) - (a.revenueDailyEstimate||0),
-      new:       (a,b) => (a.ageDays ?? 1e9) - (b.ageDays ?? 1e9),
-      gross:     (a,b) => (a.bestGross ?? 1e9) - (b.bestGross ?? 1e9),
+      hype:      (a, b) => b.hype - a.hype,
+      downloads: (a, b) => (b.downloads.total || 0) - (a.downloads.total || 0),
+      revenue:   (a, b) => (b.revenueDailyEstimate || 0) - (a.revenueDailyEstimate || 0),
+      new:       (a, b) => (a.ageDays ?? 1e9) - (b.ageDays ?? 1e9),
+      gross:     byGross,
     }[state.sort];
-    // "Şu an zirvede" sekmesi doğal olarak grossing sırasına göre açılır
-    return rows.sort(state.view === 'grossing' && state.sort === 'hype' ? cmp_gross : cmp);
+    return r.sort(state.view === 'grossing' && state.sort === 'hype' ? byGross : cmp);
   }
-  const cmp_gross = (a,b) => (a.bestGross ?? 1e9) - (b.bestGross ?? 1e9);
 
-  // ---- satır çizimi ----
+  // --- satır ---
   function rowHtml(g, i) {
     const dl = g.downloads.total;
-    const dlMeasured = g.downloads.androidTotal !== null && !g.platforms.ios;
+    const measured = g.downloads.androidTotal !== null && !g.platforms.ios;
     const rev = g.revenueDailyEstimate;
-    const win = g.downloads.windowDelta;
+    const p = g.platforms;
     return `
-      <div class="row${state.open === g.key ? ' active' : ''}" data-key="${g.key}"
-           role="button" tabindex="0" aria-label="${esc(g.title)} detayı">
-        <span class="rank ${i < 3 ? 'top' : ''}">${i+1}</span>
-        <span class="game">
+      <div class="row${state.open === g.key ? ' open' : ''}" data-key="${g.key}"
+           role="button" tabindex="0" aria-expanded="${state.open === g.key}">
+        <span class="rank${i < 3 ? ' podium' : ''}">${i + 1}</span>
+        <span class="g">
           ${tile(g.title)}
-          <span class="t">
-            <span class="name">${esc(g.title)}</span>
+          <span class="txt">
+            <span class="nm">${esc(g.title)}</span>
             <span class="sub">
-              ${esc(g.publisher || '')}
-              <span class="stores">
-                ${g.platforms.ios?.url ? `<a class="store" href="${esc(g.platforms.ios.url)}" target="_blank" rel="noopener" title="App Store sayfası">App Store ↗</a>` : ''}
-                ${g.platforms.android?.url ? `<a class="store play" href="${esc(g.platforms.android.url)}" target="_blank" rel="noopener" title="Google Play sayfası">Play ↗</a>` : ''}
-              </span>
-              ${g.ageDays !== null ? `<span class="mono" style="font-size:10.5px">${g.ageDays}g</span>` : ''}
+              <span class="pub">${esc(g.publisher || '')}</span>
+              ${p.ios?.url ? `<a class="store" href="${esc(p.ios.url)}" target="_blank" rel="noopener">App Store</a>` : ''}
+              ${p.android?.url ? `<a class="store play" href="${esc(p.android.url)}" target="_blank" rel="noopener">Play</a>` : ''}
             </span>
           </span>
         </span>
-        <span class="cell c-hype hype">
-          <span class="v" style="color:${g.hype>=60?'var(--heat)':'inherit'}">${Math.round(g.hype)}</span>
-          <span class="bar"><i style="width:${Math.max(3,Math.min(100,g.hype))}%"></i></span>
+        <span class="cell c-hp hp">
+          <span class="v"${g.hype >= 60 ? ' style="color:var(--heat)"' : ''}>${Math.round(g.hype)}</span>
+          <span class="track"><i style="width:${Math.max(3, Math.min(100, g.hype))}%"></i></span>
         </span>
         <span class="cell c-dl r">
-          <span class="lbl">İndirme</span>
-          ${dl ? `<span class="${dlMeasured?'measured':'est'}" title="${dlMeasured?'Play ölçümü':'Play ölçümü + iOS tahmini'}">${dlMeasured?'':'≈'}${fmtCompact(dl)}</span>` : '<span style="color:var(--ink-3)">—</span>'}
-          ${win ? `<br><span class="delta up">+${fmtCompact(win)}</span>` : ''}
+          <span class="k">indirme</span>
+          ${dl ? `<span class="${measured ? '' : 'est'}">${num(dl)}</span>` : '<span class="miss">—</span>'}
+          ${g.downloads.windowDelta ? `<span class="sub2 up">+${num(g.downloads.windowDelta)}</span>` : ''}
         </span>
         <span class="cell c-rev r">
-          <span class="lbl">Net IAP</span>
-          ${rev ? `<span class="est" title="Hasılat sırasından modellenmiş net IAP geliri tahmini. 15 sektör tahminine kalibre; belirsizlik en az ±%40.">≈${fmtMoney(rev)}<span class="per">/gün</span></span>
-                   <span class="mo">≈${fmtMoney(rev * MONTH_DAYS)}<span class="per">/ay</span></span>`
-                : '<span style="color:var(--ink-3)">—</span>'}
+          <span class="k">net IAP</span>
+          ${rev ? `<span class="est" title="Hasılat sırasından modellenmiş net IAP tahmini; belirsizlik en az ±%40">${usd(rev)}</span>
+                   <span class="sub2">${usd(rev * MONTH)}/ay</span>`
+                : '<span class="miss">—</span>'}
         </span>
-        <span class="cell c-tier"><span class="tier ${g.tier}">${TIER_LABELS[g.tier]}</span></span>
-        <span class="cell c-cty r mono" title="Chart'ta olduğu ülke sayısı">${g.countryCount}<span class="lbl"> ülke</span></span>
+        <span class="cell c-tag"><span class="tag ${g.tier}">${TIERS[g.tier]}</span></span>
+        <span class="cell c-cty r mono" title="Chart'ta olduğu ülke sayısı">${g.countryCount}</span>
       </div>
-      ${state.open === g.key ? detailHtml(g) : ''}`;
+      ${state.open === g.key ? detail(g) : ''}`;
   }
 
-  function detailHtml(g) {
-    const comps = Object.entries(COMPONENT_LABELS).map(([k, [label, desc]]) => {
+  function detail(g) {
+    const comps = Object.entries(COMPONENTS).map(([k, [label, desc]]) => {
       const v = g.components[k];
       return `<span title="${esc(desc)}">${esc(label)}</span>
-        <span class="cbar">${v===null?'':`<i style="width:${Math.round(v*100)}%"></i>`}</span>
-        ${v===null ? '<span class="na">ölçülemedi</span>' : `<span class="cv">${Math.round(v*100)}</span>`}`;
+        <span class="track">${v === null ? '' : `<i style="width:${Math.round(v * 100)}%"></i>`}</span>
+        ${v === null ? '<span class="na">yok</span>' : `<span class="n">${Math.round(v * 100)}</span>`}`;
     }).join('');
 
-    const countries = DATA.countries.filter(c => g.ranks[c.code]);
-    const rows = countries.map(c => {
+    const rows = DATA.countries.filter((c) => g.ranks[c.code]).map((c) => {
       const r = g.ranks[c.code];
-      const cell = (x) => x ? `<td class="mono">#${x}</td>` : '<td class="miss">—</td>';
-      return `<tr><td>${esc(c.label)}</td>${cell(r.free)}${cell(r.grossing)}${cell(r.new)}${cell(r.paid)}</tr>`;
+      const td = (x) => x ? `<td>#${x}</td>` : '<td class="miss">—</td>';
+      return `<tr><td>${esc(c.label)}</td>${td(r.free)}${td(r.grossing)}${td(r.new)}</tr>`;
     }).join('');
 
     const p = g.platforms;
-    return `<div class="detail"><div class="detail-in">
+    const rate = (s) => s?.rating ? `${s.rating.toFixed(2).replace('.', ',')} · ${num(s.ratingCount)}` : '<span class="miss">—</span>';
+    return `<div class="det">
       <div>
-        <h3>Skor kırılımı · kapsam ${Math.round(g.coverage*100)}%</h3>
+        <h4>Skor kırılımı · kapsam %${Math.round(g.coverage * 100)}</h4>
         <div class="comp">${comps}</div>
-        <h3 style="margin-top:16px">Mağaza verisi</h3>
-        <table class="ctable"><tbody>
-          <tr><td>Play kümülatif kurulum</td><td class="measured">${fmtCompact(g.downloads.androidTotal) ?? '<span class="miss">—</span>'}</td></tr>
-          <tr><td>iOS indirme (tahmin)</td><td class="est">${g.downloads.iosTotalEstimate ? '≈'+fmtCompact(g.downloads.iosTotalEstimate) : '<span class="miss">—</span>'}</td></tr>
-          <tr><td>Net IAP geliri (tahmin)</td><td class="est">${g.revenueDailyEstimate ? '≈'+fmtMoney(g.revenueDailyEstimate)+'/gün' : '<span class="miss">—</span>'}</td></tr>
-          <tr><td>Net IAP geliri — aylık (tahmin)</td><td class="est">${g.revenueDailyEstimate ? '≈'+fmtMoney(g.revenueDailyEstimate*MONTH_DAYS)+'/ay' : '<span class="miss">—</span>'}</td></tr>
-          <tr><td>IAP fiyat aralığı</td><td>${esc(g.iapRange || '—')}</td></tr>
-          <tr><td>iOS puan</td><td>${p.ios?.rating ? p.ios.rating.toFixed(2).replace('.',',')+' ('+fmtCompact(p.ios.ratingCount)+')' : '<span class="miss">—</span>'}</td></tr>
-          <tr><td>Android puan</td><td>${p.android?.rating ? p.android.rating.toFixed(2).replace('.',',')+' ('+fmtCompact(p.android.ratingCount)+')' : '<span class="miss">—</span>'}</td></tr>
-          <tr><td>Çıkış</td><td>${g.releasedAt ? esc(new Date(g.releasedAt).toLocaleDateString('tr-TR')) : '<span class="miss">—</span>'}</td></tr>
-          <tr><td>Tür</td><td>${esc((g.genres||[]).filter(x=>x!=='Games').join(', ') || '—')}</td></tr>
-        </tbody></table>
       </div>
       <div>
-        <h3>Ülke bazında sıra</h3>
-        <div style="overflow-x:auto">
-        <table class="ctable">
-          <thead><tr><th>Ülke</th><th>Ücretsiz</th><th>Hasılat</th><th>Yeni</th><th>Ücretli</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table></div>
-      </div>
-    </div></div>`;
-  }
-
-  /**
-   * Yan panel içeriği: mağaza sayfaları.
-   * Sayfanın kendisi iframe'e gömülemiyor — App Store `x-frame-options: DENY`,
-   * Google Play `SAMEORIGIN` gönderiyor. Bu tarayıcı seviyesinde bir engel,
-   * tercih değil. Panel bu yüzden mağaza kartını ve büyük açma düğmelerini
-   * gösteriyor; sayfa yeni sekmede açılıyor.
-   */
-  function paneHtml(g) {
-    const p = g.platforms;
-    const fmtRating = (r, n) => r ? `${r.toFixed(2).replace('.', ',')} ★ · ${fmtCompact(n) ?? '—'} değerlendirme` : 'puan yok';
-    const card = (store, label, cls) => {
-      if (!store?.url) {
-        return `<div class="storecard off"><b>${label}</b><span>bu mağazada chart'ta değil</span></div>`;
-      }
-      return `<a class="storecard ${cls}" href="${esc(store.url)}" target="_blank" rel="noopener">
-        <b>${label} <span class="go">↗</span></b>
-        <span>${fmtRating(store.rating, store.ratingCount)}</span>
-      </a>`;
-    };
-    return `
-      <div class="pane-hero">
-        ${tile(g.title)}
-        <div class="t">
-          <div class="name">${esc(g.title)}</div>
-          <div class="pub">${esc(g.publisher || '')}${g.ageDays !== null ? ' · ' + g.ageDays + ' günlük' : ''}</div>
-        </div>
-      </div>
-
-      <div class="storecards">
-        ${card(p.ios, 'App Store', 'ios')}
-        ${card(p.android, 'Google Play', 'play')}
-      </div>
-
-      <table class="ctable" style="width:100%; margin-top:18px">
-        <tbody>
-          <tr><td>IAP fiyat aralığı</td><td>${esc(g.iapRange || '—')}</td></tr>
+        <h4>Mağaza verisi</h4>
+        <table class="kv"><tbody>
+          <tr><td>Play kurulum (ölçüm)</td><td>${num(g.downloads.androidTotal) ?? '<span class="miss">—</span>'}</td></tr>
+          <tr><td>iOS indirme (tahmin)</td><td class="est">${num(g.downloads.iosTotalEstimate) ?? '<span class="miss">—</span>'}</td></tr>
+          <tr><td>Net IAP (tahmin)</td><td class="est">${rev0(g)}</td></tr>
+          <tr><td>IAP aralığı</td><td>${esc(g.iapRange || '—')}</td></tr>
+          <tr><td>iOS puan</td><td>${rate(p.ios)}</td></tr>
+          <tr><td>Android puan</td><td>${rate(p.android)}</td></tr>
           <tr><td>Çıkış</td><td>${g.releasedAt ? esc(new Date(g.releasedAt).toLocaleDateString('tr-TR')) : '<span class="miss">—</span>'}</td></tr>
           <tr><td>Tür</td><td>${esc((g.genres || []).filter((x) => x !== 'Games').join(', ') || '—')}</td></tr>
-          <tr><td>Hype skoru</td><td><b>${Math.round(g.hype)}</b> · ${TIER_LABELS[g.tier]}</td></tr>
-          <tr><td>En iyi hasılat sırası</td><td>${g.bestGross ? '#' + g.bestGross : '<span class="miss">—</span>'}</td></tr>
-        </tbody>
-      </table>
-
-      <p class="pane-note">Mağaza sayfaları başka sitelere gömülmeye izin vermiyor
-      (App Store <code>X-Frame-Options: DENY</code>, Google Play <code>SAMEORIGIN</code>),
-      bu yüzden burada açılamıyor — düğmeler yeni sekmede açar.
-      Ayrıntılı metrikler satırın altında.</p>`;
+        </tbody></table>
+        <div class="links">
+          ${p.ios?.url ? `<a href="${esc(p.ios.url)}" target="_blank" rel="noopener">App Store ↗</a>` : ''}
+          ${p.android?.url ? `<a href="${esc(p.android.url)}" target="_blank" rel="noopener">Google Play ↗</a>` : ''}
+        </div>
+      </div>
+      <div>
+        <h4>Ülke bazında sıra</h4>
+        <table class="ranks">
+          <thead><tr><th>Ülke</th><th>Ücretsiz</th><th>Hasılat</th><th>Yeni</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
   }
+  const rev0 = (g) => g.revenueDailyEstimate
+    ? `${usd(g.revenueDailyEstimate)}/gün · ${usd(g.revenueDailyEstimate * MONTH)}/ay`
+    : '<span class="miss">—</span>';
 
   function render() {
     const rows = visible();
     const list = document.getElementById('list');
-    if (!rows.length) {
-      list.innerHTML = '<div class="empty">Bu filtrelerle eşleşen oyun yok.</div>';
-      return;
-    }
-    const shown = rows.slice(0, 250);
-    visibleKeys = shown.map((g) => g.key);   // panelin ileri/geri sırası listeyi takip eder
+    if (!rows.length) { list.innerHTML = '<div class="empty">Bu filtrelerle eşleşen oyun yok.</div>'; return; }
     list.innerHTML =
-      `<div class="head">
-        <span>#</span><span>Oyun</span><span>Hype</span><span class="r">İndirme</span>
+      `<div class="hrow">
+        <span></span><span>Oyun</span><span>Hype</span><span class="r">İndirme</span>
         <span class="r">Net IAP</span><span>Kademe</span><span class="r">Ülke</span>
-      </div>` + shown.map(rowHtml).join('') +
+      </div>` + rows.slice(0, 250).map(rowHtml).join('') +
       (rows.length > 250 ? `<div class="empty">${rows.length - 250} oyun daha — aramayla daraltın.</div>` : '');
-    markActiveRow();
   }
 
-  // ---- olaylar ----
-  // ---- yan panel ----
-  const shell = document.getElementById('shell');
-  const pane = document.getElementById('pane');
-  const paneBody = document.getElementById('pane-body');
-  let visibleKeys = [];   // panelde ileri/geri gezinmek için o anki filtrelenmiş sıra
-
-  function openPane(key) {
-    const g = G.find((x) => x.key === key);
-    if (!g) return;
-    state.open = key;
-    render();          // satırın altındaki ayrıntı bloğu da bu tıklamayla açılıyor
-    pane.hidden = false;
-    // hidden kaldırıldıktan hemen sonra sınıf eklenirse geçiş atlanıyor; bir kare bekle.
-    requestAnimationFrame(() => shell.classList.add('open'));
-    document.getElementById('pane-title').textContent = g.title ?? '';
-    document.getElementById('pane-sub').textContent =
-      [g.publisher, g.bestGross ? 'hasılat #' + g.bestGross : null].filter(Boolean).join(' · ');
-    paneBody.innerHTML = paneHtml(g);
-    paneBody.scrollTop = 0;
-    const i = visibleKeys.indexOf(key);
-    document.getElementById('pane-prev').disabled = i <= 0;
-    document.getElementById('pane-next').disabled = i < 0 || i >= visibleKeys.length - 1;
-    markActiveRow();
-  }
-
-  function closePane() {
-    state.open = null;
-    shell.classList.remove('open');
-    render();          // satır altındaki ayrıntı da kapanır
-    // geçiş bitmeden hidden verilirse panel anında kayboluyor
-    setTimeout(() => { if (!state.open) pane.hidden = true; }, 420);
-  }
-
-  function stepPane(delta) {
-    const i = visibleKeys.indexOf(state.open);
-    const next = visibleKeys[i + delta];
-    if (next) openPane(next);
-  }
-
-  function markActiveRow() {
-    for (const el of document.querySelectorAll('.row')) {
-      el.classList.toggle('active', el.dataset.key === state.open);
-    }
-  }
-
-  document.getElementById('list').addEventListener('click', (e) => {
-    if (e.target.closest('a')) return;   // mağaza butonları paneli açmasın
+  // --- olaylar ---
+  const list = document.getElementById('list');
+  const toggle = (key) => { state.open = state.open === key ? null : key; render(); };
+  list.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;          // mağaza linkleri satırı açmasın
     const row = e.target.closest('.row');
-    if (!row) return;
-    if (state.open === row.dataset.key) closePane(); else openPane(row.dataset.key);
+    if (row) toggle(row.dataset.key);
   });
-  document.getElementById('list').addEventListener('keydown', (e) => {
+  list.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const row = e.target.closest('.row');
     if (!row || e.target.closest('a')) return;
-    e.preventDefault();
-    openPane(row.dataset.key);
-  });
-  document.getElementById('pane-close').addEventListener('click', closePane);
-  document.getElementById('pane-prev').addEventListener('click', () => stepPane(-1));
-  document.getElementById('pane-next').addEventListener('click', () => stepPane(1));
-  document.addEventListener('keydown', (e) => {
-    if (!state.open) return;
-    if (e.target.matches('input, select, textarea')) return;
-    if (e.key === 'Escape') closePane();
-    else if (e.key === 'ArrowLeft') stepPane(-1);
-    else if (e.key === 'ArrowRight') stepPane(1);
+    e.preventDefault(); toggle(row.dataset.key);
   });
   document.getElementById('tabs').addEventListener('click', (e) => {
     const t = e.target.closest('.tab'); if (!t) return;
-    state.view = t.dataset.view;
-    if (state.open) closePane();
-    [...document.querySelectorAll('.tab')].forEach(x => x.setAttribute('aria-selected', String(x === t)));
-    persist(); render();
+    state.view = t.dataset.view; state.open = null;
+    document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === t)));
+    save(); render();
   });
   document.getElementById('q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
-  cSel.addEventListener('change', (e) => { state.country = e.target.value; persist(); render(); });
-  document.getElementById('sort').addEventListener('change', (e) => { state.sort = e.target.value; persist(); render(); });
-  for (const [id, key] of [['fIos','ios'], ['fAnd','android']]) {
+  cSel.addEventListener('change', (e) => { state.country = e.target.value; save(); render(); });
+  document.getElementById('sort').addEventListener('change', (e) => { state.sort = e.target.value; save(); render(); });
+  for (const [id, key] of [['fIos', 'ios'], ['fAnd', 'android']]) {
     document.getElementById(id).addEventListener('click', (e) => {
       state[key] = !state[key];
       e.currentTarget.setAttribute('aria-pressed', String(state[key]));
       render();
     });
   }
-  [...document.querySelectorAll('.tab')].forEach(x =>
+  document.querySelectorAll('.tab').forEach((x) =>
     x.setAttribute('aria-selected', String(x.dataset.view === state.view)));
 
-  // ---- yöntem kutusu ----
+  // --- yöntem ---
   document.getElementById('methodBody').innerHTML = `
     <div>
-      <h4>Bileşenler ve ağırlıkları</h4>
-      <ul>${Object.entries(DATA.weights || {}).map(([k,w]) =>
-        `<li><b>${esc(COMPONENT_LABELS[k]?.[0] ?? k)}</b> — %${Math.round(w*100)}<br>
-         <span style="color:var(--ink-3)">${esc(COMPONENT_LABELS[k]?.[1] ?? '')}</span></li>`).join('')}</ul>
-      <p style="color:var(--ink-3)">Her bileşen kohort içi yüzdelik sıraya çevrilir; ölçülemeyen bileşenin
-      ağırlığı kalanlara dağıtılır ve satır <b>kapsam</b> oranıyla cezalandırılır.</p>
+      <h5>Bileşenler</h5>
+      <ul>${Object.entries(DATA.weights || {}).map(([k, w]) =>
+        `<li><b>${esc(COMPONENTS[k]?.[0] ?? k)}</b> %${Math.round(w * 100)} — ${esc(COMPONENTS[k]?.[1] ?? '')}</li>`).join('')}</ul>
+      <p>Her bileşen kohort içi yüzdelik sıraya çevrilir; ölçülemeyenin ağırlığı kalanlara dağıtılır
+      ve satır kapsam oranıyla cezalandırılır.</p>
     </div>
     <div>
-      <h4>Ölçülen veri</h4>
-      <ul>${DATA.methodology.measured.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
-      <h4 style="margin-top:12px">Tahmin edilen veri</h4>
-      <ul>${DATA.methodology.estimated.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
-      <p style="color:var(--ink-3)">${esc(DATA.methodology.note)} Tahmini sayılar tabloda
-      <span class="est">kesikli altı çizili</span> ve <code>≈</code> ile gösterilir.</p>
+      <h5>Ölçülen</h5>
+      <ul>${DATA.methodology.measured.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+      <h5 style="margin-top:14px">Tahmin</h5>
+      <ul>${DATA.methodology.estimated.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
     </div>
     <div>
-      <h4>Kalibrasyon</h4>
-      <p>iOS indirme tahmini sabit katsayı değil: her taramada iOS↔Android eşleşmiş
+      <h5>Gelir modeli</h5>
+      <p>${esc(DATA.methodology.note)}</p>
+      ${DATA.methodology.revenueCalibration ? `<p><b>${DATA.methodology.revenueCalibration.anchors}</b>
+        sektör tahminine kalibre (${esc(DATA.methodology.revenueCalibration.period)}): medyan oran
+        <b>${String(DATA.methodology.revenueCalibration.medianRatio).replace('.', ',')}×</b>,
+        ${esc(DATA.methodology.revenueCalibration.within2x)} çapa 2 kat içinde.</p>` : ''}
+      <h5 style="margin-top:14px">Kalibrasyon</h5>
+      <p>iOS indirme tahmini sabit katsayı değil: her taramada eşleşmiş
       <b>${DATA.calibration.pairs}</b> oyundan medyan oran hesaplanıyor —
-      bu turda <b>1 değerlendirme ≈ ${String(DATA.calibration.installsPerRating).replace('.',',')} indirme</b>.</p>
-      <h4 style="margin-top:12px">Kademeler</h4>
-      <ul>
-        <li><span class="tier breakout">Patlama</span> 180 günden genç ve hype ≥ 60</li>
-        <li><span class="tier rising">Yükselen</span> hype ≥ 45</li>
-        <li><span class="tier established">Zirve</span> bir ülkede hasılat ilk 20</li>
-        <li><span class="tier watch">İzlemede</span> chart'ta ama sinyal zayıf</li>
-      </ul>
+      bu turda 1 değerlendirme ≈ <b>${String(DATA.calibration.installsPerRating).replace('.', ',')}</b> indirme.</p>
     </div>`;
 
   document.getElementById('foot').textContent =
-    `Snapshot #${DATA.snapshotId} · bu sayfada ${DATA.games.length} oyun gösteriliyor` +
-    (DATA.totalGames ? ` (taranan ${DATA.totalGames} oyunun hype sıralamasına göre üst kısmı)` : '') +
-    ` · veri: App Store RSS + iTunes Lookup, Google Play · liste 2-3 günde bir yenilenir`;
+    `Snapshot #${DATA.snapshotId} · bu sayfada ${DATA.games.length} oyun` +
+    (DATA.totalGames ? ` (taranan ${DATA.totalGames} oyunun üst kısmı)` : '') +
+    ` · App Store RSS + iTunes Lookup, Google Play · 2 günde bir yenilenir`;
 
   render();
 })();
