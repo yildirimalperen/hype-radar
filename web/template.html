@@ -178,6 +178,23 @@ select{font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--lin
 .pane-kpi .k{font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3)}
 .pane-kpi .v{font-weight:600; font-size:15px; font-variant-numeric:tabular-nums; margin-top:2px}
 
+/* mağaza kartları — panelin asıl işi */
+.storecards{display:grid; gap:10px}
+.storecard{display:flex; flex-direction:column; gap:3px; padding:14px 16px; border-radius:12px;
+  border:1px solid var(--line-2); text-decoration:none; color:inherit; background:var(--surface)}
+.storecard b{font-size:15px; font-weight:600}
+.storecard span{font-size:12.5px; color:var(--ink-3)}
+.storecard .go{color:var(--ink-3); font-weight:400}
+.storecard.ios:hover{border-color:var(--heat)}
+.storecard.ios:hover b, .storecard.ios:hover .go{color:var(--heat)}
+.storecard.play{border-color:color-mix(in srgb, var(--money) 40%, var(--line-2))}
+.storecard.play b{color:var(--money)}
+.storecard.play:hover{border-color:var(--money); background:var(--money-soft)}
+.storecard.off{opacity:.55; border-style:dashed}
+.pane-note{font-size:12px; line-height:1.6; color:var(--ink-3); background:var(--surface-2);
+  border-radius:10px; padding:11px 13px; margin-top:20px}
+.pane-note code{font-family:"IBM Plex Mono",monospace; font-size:11px}
+
 /* satır içi mağaza butonları */
 .stores{display:inline-flex; gap:5px; margin-left:2px}
 .store{font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:600; letter-spacing:.03em;
@@ -469,7 +486,8 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
         </span>
         <span class="cell c-tier"><span class="tier ${g.tier}">${TIER_LABELS[g.tier]}</span></span>
         <span class="cell c-cty r mono" title="Chart'ta olduğu ülke sayısı">${g.countryCount}<span class="lbl"> ülke</span></span>
-      </div>`;
+      </div>
+      ${state.open === g.key ? detailHtml(g) : ''}`;
   }
 
   function detailHtml(g) {
@@ -488,33 +506,7 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
     }).join('');
 
     const p = g.platforms;
-    const dl = g.downloads.total;
-    return `
-      <div class="pane-hero">
-        ${tile(g.title)}
-        <div class="t">
-          <div class="name">${esc(g.title)}</div>
-          <div class="pub">${esc(g.publisher || '')}${g.ageDays !== null ? ' · ' + g.ageDays + ' günlük' : ''}</div>
-        </div>
-      </div>
-      <div class="pane-score">
-        <span class="big">${Math.round(g.hype)}</span>
-        <span>
-          <span class="tier ${g.tier}">${TIER_LABELS[g.tier]}</span>
-          <div style="font-size:11.5px;color:var(--ink-3);margin-top:3px">hype skoru · ${g.countryCount} ülkede chart'ta</div>
-        </span>
-      </div>
-      <div class="pane-kpi">
-        <div><span class="k">İndirme</span><span class="v">${dl ? (g.downloads.androidTotal !== null && !p.ios ? '' : '≈') + fmtCompact(dl) : '—'}</span></div>
-        <div><span class="k">Net IAP / gün</span><span class="v">${g.revenueDailyEstimate ? '≈' + fmtMoney(g.revenueDailyEstimate) : '—'}</span></div>
-        <div><span class="k">Net IAP / ay</span><span class="v">${g.revenueDailyEstimate ? '≈' + fmtMoney(g.revenueDailyEstimate * MONTH_DAYS) : '—'}</span></div>
-        <div><span class="k">En iyi hasılat sırası</span><span class="v">${g.bestGross ? '#' + g.bestGross : '—'}</span></div>
-      </div>
-      <div class="links" style="margin:0 0 20px">
-        ${p.ios?.url ? `<a href="${esc(p.ios.url)}" target="_blank" rel="noopener">App Store ↗</a>` : ''}
-        ${p.android?.url ? `<a href="${esc(p.android.url)}" target="_blank" rel="noopener">Google Play ↗</a>` : ''}
-      </div>
-      <div class="detail-in">
+    return `<div class="detail"><div class="detail-in">
       <div>
         <h3>Skor kırılımı · kapsam ${Math.round(g.coverage*100)}%</h3>
         <div class="comp">${comps}</div>
@@ -539,7 +531,56 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
           <tbody>${rows}</tbody>
         </table></div>
       </div>
-    </div>`;
+    </div></div>`;
+  }
+
+  /**
+   * Yan panel içeriği: mağaza sayfaları.
+   * Sayfanın kendisi iframe'e gömülemiyor — App Store `x-frame-options: DENY`,
+   * Google Play `SAMEORIGIN` gönderiyor. Bu tarayıcı seviyesinde bir engel,
+   * tercih değil. Panel bu yüzden mağaza kartını ve büyük açma düğmelerini
+   * gösteriyor; sayfa yeni sekmede açılıyor.
+   */
+  function paneHtml(g) {
+    const p = g.platforms;
+    const fmtRating = (r, n) => r ? `${r.toFixed(2).replace('.', ',')} ★ · ${fmtCompact(n) ?? '—'} değerlendirme` : 'puan yok';
+    const card = (store, label, cls) => {
+      if (!store?.url) {
+        return `<div class="storecard off"><b>${label}</b><span>bu mağazada chart'ta değil</span></div>`;
+      }
+      return `<a class="storecard ${cls}" href="${esc(store.url)}" target="_blank" rel="noopener">
+        <b>${label} <span class="go">↗</span></b>
+        <span>${fmtRating(store.rating, store.ratingCount)}</span>
+      </a>`;
+    };
+    return `
+      <div class="pane-hero">
+        ${tile(g.title)}
+        <div class="t">
+          <div class="name">${esc(g.title)}</div>
+          <div class="pub">${esc(g.publisher || '')}${g.ageDays !== null ? ' · ' + g.ageDays + ' günlük' : ''}</div>
+        </div>
+      </div>
+
+      <div class="storecards">
+        ${card(p.ios, 'App Store', 'ios')}
+        ${card(p.android, 'Google Play', 'play')}
+      </div>
+
+      <table class="ctable" style="width:100%; margin-top:18px">
+        <tbody>
+          <tr><td>IAP fiyat aralığı</td><td>${esc(g.iapRange || '—')}</td></tr>
+          <tr><td>Çıkış</td><td>${g.releasedAt ? esc(new Date(g.releasedAt).toLocaleDateString('tr-TR')) : '<span class="miss">—</span>'}</td></tr>
+          <tr><td>Tür</td><td>${esc((g.genres || []).filter((x) => x !== 'Games').join(', ') || '—')}</td></tr>
+          <tr><td>Hype skoru</td><td><b>${Math.round(g.hype)}</b> · ${TIER_LABELS[g.tier]}</td></tr>
+          <tr><td>En iyi hasılat sırası</td><td>${g.bestGross ? '#' + g.bestGross : '<span class="miss">—</span>'}</td></tr>
+        </tbody>
+      </table>
+
+      <p class="pane-note">Mağaza sayfaları başka sitelere gömülmeye izin vermiyor
+      (App Store <code>X-Frame-Options: DENY</code>, Google Play <code>SAMEORIGIN</code>),
+      bu yüzden burada açılamıyor — düğmeler yeni sekmede açar.
+      Ayrıntılı metrikler satırın altında.</p>`;
   }
 
   function render() {
@@ -571,13 +612,14 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
     const g = G.find((x) => x.key === key);
     if (!g) return;
     state.open = key;
+    render();          // satırın altındaki ayrıntı bloğu da bu tıklamayla açılıyor
     pane.hidden = false;
     // hidden kaldırıldıktan hemen sonra sınıf eklenirse geçiş atlanıyor; bir kare bekle.
     requestAnimationFrame(() => shell.classList.add('open'));
     document.getElementById('pane-title').textContent = g.title ?? '';
     document.getElementById('pane-sub').textContent =
       [g.publisher, g.bestGross ? 'hasılat #' + g.bestGross : null].filter(Boolean).join(' · ');
-    paneBody.innerHTML = detailHtml(g);
+    paneBody.innerHTML = paneHtml(g);
     paneBody.scrollTop = 0;
     const i = visibleKeys.indexOf(key);
     document.getElementById('pane-prev').disabled = i <= 0;
@@ -588,7 +630,7 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
   function closePane() {
     state.open = null;
     shell.classList.remove('open');
-    markActiveRow();
+    render();          // satır altındaki ayrıntı da kapanır
     // geçiş bitmeden hidden verilirse panel anında kayboluyor
     setTimeout(() => { if (!state.open) pane.hidden = true; }, 420);
   }
