@@ -127,6 +127,8 @@ select{font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--lin
 .cell{font-size:13px; font-variant-numeric:tabular-nums}
 .cell .lbl{display:none}
 .est{border-bottom:1px dashed var(--est); color:var(--ink-2)}
+.per{font-size:9.5px; color:var(--ink-3); letter-spacing:.02em; margin-left:1px}
+.mo{display:block; font-size:11.5px; color:var(--ink-3); margin-top:1px}
 .measured{font-weight:600}
 .delta{font-size:11px; font-variant-numeric:tabular-nums}
 .delta.up{color:var(--good)} .delta.down{color:var(--crit)} .delta.flat{color:var(--ink-3)}
@@ -173,6 +175,7 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
   .row .c-hype{grid-area:hype}
   .row .c-dl,.row .c-rev,.row .c-tier,.row .c-cty{grid-area:meta; display:inline}
   .row .c-dl,.row .c-rev{margin-right:14px}
+  .mo{display:inline; margin-left:6px}
   .cell .lbl{display:inline; font-size:10px; text-transform:uppercase; letter-spacing:.06em;
     color:var(--ink-3); margin-right:4px}
   .r{text-align:left}
@@ -240,20 +243,22 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
   const CTY = Object.fromEntries(DATA.countries.map(c => [c.code, c.label]));
 
   const nf = new Intl.NumberFormat('tr-TR');
-  // Türkçe kısaltmalar: bin / milyon / milyar. Tek harf "B" milyar sanılıyor, açık yazıyoruz.
+  // Gösterim: $ bazında B / M / k. Sektörde (AppMagic, Sensor Tower) kullanılan
+  // biçim bu; ondalık ayırıcı da o yüzden nokta.
+  const MONTH_DAYS = 30.44;
   const fmtCompact = (n) => {
     if (n === null || n === undefined) return null;
-    if (n >= 1e9) return (n/1e9).toFixed(n>=1e10?0:1).replace('.',',') + ' milyar';
-    if (n >= 1e6) return (n/1e6).toFixed(n>=1e7?0:1).replace('.',',') + ' mn';
-    if (n >= 1e3) return Math.round(n/1e3) + ' bin';
+    if (n >= 1e9) return (n/1e9).toFixed(n>=1e10?0:1) + 'B';
+    if (n >= 1e6) return (n/1e6).toFixed(n>=1e7?0:1) + 'M';
+    if (n >= 1e3) return Math.round(n/1e3) + 'k';
     return nf.format(n);
   };
   const fmtMoney = (n) => {
     if (!n) return null;
-    if (n >= 1e9) return '$' + (n/1e9).toFixed(1).replace('.',',') + ' milyar';
-    if (n >= 1e6) return '$' + (n/1e6).toFixed(1).replace('.',',') + ' mn';
-    if (n >= 1e3) return '$' + Math.round(n/1e3) + ' bin';
-    return '$' + nf.format(n);
+    if (n >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return '$' + (n/1e6).toFixed(n>=1e8?0:1) + 'M';
+    if (n >= 1e3) return '$' + Math.round(n/1e3) + 'k';
+    return '$' + Math.round(n);
   };
   // Artifact CSP dış görselleri engelliyor; mağaza ikonu yerine başlıktan
   // deterministik renkli karo üretiyoruz (aynı oyun her zaman aynı rengi alır).
@@ -305,8 +310,8 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
       <span class="s">grossing ilk 20</span></div>
     <div class="sum"><span class="k">Çapraz platform</span><span class="v">${DATA.counts.crossPlatform}</span>
       <span class="s">iOS + Android eşleşti</span></div>
-    <div class="sum money"><span class="k">Takip edilen gelir</span><span class="v">${fmtMoney(topRev) ?? '—'}</span>
-      <span class="s">gün / tahmin</span></div>
+    <div class="sum money"><span class="k">Takip edilen net IAP</span><span class="v">${fmtMoney(topRev * MONTH_DAYS) ?? '—'}</span>
+      <span class="s">${fmtMoney(topRev) ?? '—'} / gün · tahmin</span></div>
     <div class="sum"><span class="k">Ölçülen kurulum</span><span class="v">${fmtCompact(measuredDl) ?? '—'}</span>
       <span class="s">Play, kümülatif</span></div>`;
 
@@ -374,8 +379,9 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
           ${win ? `<br><span class="delta up">+${fmtCompact(win)}</span>` : ''}
         </span>
         <span class="cell c-rev r">
-          <span class="lbl">Net IAP/gün</span>
-          ${rev ? `<span class="est" title="Hasılat sırasından modellenmiş net IAP geliri tahmini. 15 sektör tahminine kalibre; belirsizlik en az ±%40.">≈${fmtMoney(rev)}</span>`
+          <span class="lbl">Net IAP</span>
+          ${rev ? `<span class="est" title="Hasılat sırasından modellenmiş net IAP geliri tahmini. 15 sektör tahminine kalibre; belirsizlik en az ±%40.">≈${fmtMoney(rev)}<span class="per">/gün</span></span>
+                   <span class="mo">≈${fmtMoney(rev * MONTH_DAYS)}<span class="per">/ay</span></span>`
                 : '<span style="color:var(--ink-3)">—</span>'}
         </span>
         <span class="cell c-tier"><span class="tier ${g.tier}">${TIER_LABELS[g.tier]}</span></span>
@@ -408,6 +414,8 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
         <table class="ctable"><tbody>
           <tr><td>Play kümülatif kurulum</td><td class="measured">${fmtCompact(g.downloads.androidTotal) ?? '<span class="miss">—</span>'}</td></tr>
           <tr><td>iOS indirme (tahmin)</td><td class="est">${g.downloads.iosTotalEstimate ? '≈'+fmtCompact(g.downloads.iosTotalEstimate) : '<span class="miss">—</span>'}</td></tr>
+          <tr><td>Net IAP geliri (tahmin)</td><td class="est">${g.revenueDailyEstimate ? '≈'+fmtMoney(g.revenueDailyEstimate)+'/gün' : '<span class="miss">—</span>'}</td></tr>
+          <tr><td>Net IAP geliri — aylık (tahmin)</td><td class="est">${g.revenueDailyEstimate ? '≈'+fmtMoney(g.revenueDailyEstimate*MONTH_DAYS)+'/ay' : '<span class="miss">—</span>'}</td></tr>
           <tr><td>IAP fiyat aralığı</td><td>${esc(g.iapRange || '—')}</td></tr>
           <tr><td>iOS puan</td><td>${p.ios?.rating ? p.ios.rating.toFixed(2).replace('.',',')+' ('+fmtCompact(p.ios.ratingCount)+')' : '<span class="miss">—</span>'}</td></tr>
           <tr><td>Android puan</td><td>${p.android?.rating ? p.android.rating.toFixed(2).replace('.',',')+' ('+fmtCompact(p.android.ratingCount)+')' : '<span class="miss">—</span>'}</td></tr>
@@ -440,7 +448,7 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
     list.innerHTML =
       `<div class="head">
         <span>#</span><span>Oyun</span><span>Hype</span><span class="r">İndirme</span>
-        <span class="r">Net IAP/gün</span><span>Kademe</span><span class="r">Ülke</span>
+        <span class="r">Net IAP</span><span>Kademe</span><span class="r">Ülke</span>
       </div>` + rows.slice(0, 250).map(rowHtml).join('') +
       (rows.length > 250 ? `<div class="empty">${rows.length - 250} oyun daha — aramayla daraltın.</div>` : '');
   }

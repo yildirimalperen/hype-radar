@@ -44,4 +44,9 @@ export const SCORE_WINDOW_DAYS = 2;
 // indirme/rating farkı ölçümden çok gürültüdür ve gün başına çevrilince şişer.
 // Bu sınırı geçen aday yoksa skor soğuk başlangıç gibi davranır — sahte ivme
 // üretmektense ivme bileşenlerini kapatmayı tercih ediyoruz.
-export const MIN_WINDOW_DAYS = 0.5;
+//
+// Sabit 0,5 gün yetmedi: 13 saatlik bir pencere sınırı geçip kademeleri yine
+// şişirdi (patlama 3 -> 30). 1 günden kısa her pencere günün bir dilimini yarıda
+// kesiyor; ABD akşamını sabahıyla kıyaslamak ivme değil, saat farkı ölçüyor.
+// Bu yüzden sınır pencereyle orantılı: toplama sıklığı değişirse birlikte kayar.
+export const MIN_WINDOW_DAYS = Math.max(1, SCORE_WINDOW_DAYS * 0.5);
