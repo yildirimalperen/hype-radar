@@ -44,7 +44,7 @@ function slim(report) {
       measuredInstalls: report.games.reduce((s, g) => s + (g.downloads.androidTotal || 0), 0),
     },
     games: pickEmbedded(report.games).map((g) => ({
-      key: g.key, title: g.title, publisher: g.publisher, genres: g.genres,
+      key: g.key, title: g.title, publisher: g.publisher, icon: g.icon, genres: g.genres,
       releasedAt: g.releasedAt, ageDays: g.ageDays, hype: g.hype, tier: g.tier,
       components: g.components, coverage: g.coverage, platforms: g.platforms,
       ranks: g.ranks, countryCount: g.countryCount, bestGross: g.bestGross, bestFree: g.bestFree,
