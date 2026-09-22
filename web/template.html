@@ -48,9 +48,13 @@ header.top{
 .top-meta b{color:var(--ink); font-weight:600}
 
 /* ---- özet şeridi ---- */
-.summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px;
-  background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-block:20px}
-.sum{background:var(--surface); padding:12px 14px; display:flex; flex-direction:column; gap:2px}
+/* Grid değil flex: auto-fit grid, hücreler tam sığmadığında arkada boş gri bir
+   kutu bırakıyordu. Flex sarmalamada böyle bir artık hücre oluşmuyor. */
+.summary{display:flex; flex-wrap:wrap; background:var(--surface);
+  border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-block:20px}
+.sum{flex:1 1 150px; padding:12px 14px; display:flex; flex-direction:column; gap:2px;
+  border-right:1px solid var(--line); border-top:1px solid var(--line); margin-top:-1px}
+.sum:last-child{border-right:0}
 .sum .k{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3)}
 .sum .v{font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:24px; line-height:1.1;
   font-variant-numeric:tabular-nums}
@@ -76,7 +80,8 @@ select{font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--lin
 .chip[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink)}
 
 /* ---- tablo ---- */
-.list{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+.list{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface);
+  container-type:inline-size}
 .head,.row{display:grid; align-items:center;
   grid-template-columns:44px 1fr 118px 104px 104px 96px 60px;
   gap:12px; padding:10px 14px}
@@ -134,6 +139,56 @@ select{font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--lin
 .delta.up{color:var(--good)} .delta.down{color:var(--crit)} .delta.flat{color:var(--ink-3)}
 .r{text-align:right}
 
+/* ---- yan panel: liste sola daralır, detay sağdan açılır ----
+   (ai-radar ile aynı kalıp; oradaki iframe yerine kendi detayımız var çünkü
+   App Store ve Play sayfaları gömülmeye izin vermiyor) */
+.shell{display:grid; grid-template-columns:minmax(0,1fr) 0fr;
+  transition:grid-template-columns .42s cubic-bezier(.32,.72,0,1); min-height:100vh}
+.shell.open{grid-template-columns:minmax(0,54fr) minmax(0,46fr)}
+.pane{position:sticky; top:env(safe-area-inset-top,0px); height:100vh; overflow:hidden;
+  border-left:1px solid var(--line); background:var(--surface);
+  display:flex; flex-direction:column;
+  opacity:0; transform:translateX(24px);
+  transition:opacity .3s ease .08s, transform .42s cubic-bezier(.32,.72,0,1)}
+.shell.open .pane{opacity:1; transform:none}
+.pane[hidden]{display:none}
+.pane-bar{display:flex; align-items:center; gap:8px; padding:12px 14px;
+  border-bottom:1px solid var(--line); flex:none; min-height:56px}
+.pane-bar .who{flex:1; min-width:0}
+.pane-bar .who b{display:block; font-size:14px; font-weight:600;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.pane-bar .who span{font-size:11.5px; color:var(--ink-3)}
+.pane-bar button{font:inherit; font-size:14px; line-height:1; cursor:pointer;
+  background:transparent; border:1px solid var(--line-2); color:var(--ink-2);
+  border-radius:8px; padding:7px 10px; flex:none}
+.pane-bar button:hover{color:var(--heat); border-color:var(--heat)}
+.pane-bar button:disabled{opacity:.35; cursor:default}
+.pane-body{flex:1; overflow:auto; padding:18px 18px 40px}
+.pane-hero{display:flex; gap:12px; align-items:center; margin-bottom:16px}
+.pane-hero .t{min-width:0}
+.pane-hero .name{font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:19px;
+  letter-spacing:-.01em; line-height:1.2}
+.pane-hero .pub{font-size:12.5px; color:var(--ink-3)}
+.pane-score{display:flex; gap:10px; align-items:center; margin-bottom:18px}
+.pane-score .big{font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:34px;
+  line-height:1; color:var(--heat); font-variant-numeric:tabular-nums}
+.pane-kpi{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1px;
+  background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:18px}
+.pane-kpi div{background:var(--surface); padding:10px 12px}
+.pane-kpi .k{font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3)}
+.pane-kpi .v{font-weight:600; font-size:15px; font-variant-numeric:tabular-nums; margin-top:2px}
+
+/* satır içi mağaza butonları */
+.stores{display:inline-flex; gap:5px; margin-left:2px}
+.store{font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:600; letter-spacing:.03em;
+  padding:2px 6px; border-radius:5px; text-decoration:none; white-space:nowrap;
+  border:1px solid var(--line-2); color:var(--ink-2); background:var(--surface)}
+.store:hover{border-color:var(--heat); color:var(--heat)}
+.store.play{border-color:color-mix(in srgb, var(--money) 45%, var(--line-2)); color:var(--money)}
+.store.play:hover{border-color:var(--money)}
+.row.active{background:var(--surface-2)}
+.row.active .rank{color:var(--heat)}
+
 /* ---- açılır detay ---- */
 .detail{grid-column:1/-1; padding:0; border-bottom:1px solid var(--line); background:var(--surface-2)}
 .detail-in{padding:16px 14px; display:grid; gap:18px; grid-template-columns:minmax(240px,1fr) minmax(260px,1.3fr)}
@@ -168,19 +223,32 @@ select{font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--lin
 .empty{padding:40px 16px; text-align:center; color:var(--ink-3)}
 footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
 
-@media (max-width:860px){
+/* Satır düzeni ekran genişliğine değil LİSTENİN genişliğine bağlı: yan panel
+   açılınca liste daralıyor ve sabit sütunlar sığmıyordu (oyun adı ~80px'e
+   sıkışıp mağaza butonları görünmez oluyordu). Container query ile hem panel
+   açık hâli hem telefon aynı kuralla çözülüyor. */
+@container (max-width:720px){
   .head{display:none}
-  .row{grid-template-columns:36px 1fr; grid-template-areas:"rank game" ". hype" ". meta"; gap:6px 10px; padding:12px 14px}
-  .row .rank{grid-area:rank} .row .game{grid-area:game}
-  .row .c-hype{grid-area:hype}
-  .row .c-dl,.row .c-rev,.row .c-tier,.row .c-cty{grid-area:meta; display:inline}
-  .row .c-dl,.row .c-rev{margin-right:14px}
+  /* Grid alanı DEĞİL flex: aynı grid alanına konan öğeler yan yana değil üst üste
+     biniyor (indirme, gelir, kademe ve ülke iç içe geçiyordu). Flex sarmalama
+     hepsini akış içinde tutuyor. */
+  .row{display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; padding:12px 14px}
+  .row .rank{flex:0 0 28px}
+  .row .game{flex:1 1 220px; min-width:0}
+  .row .c-hype{flex:1 0 100%; max-width:220px}
+  .row .c-dl,.row .c-rev,.row .c-tier,.row .c-cty{flex:0 0 auto}
   .mo{display:inline; margin-left:6px}
   .cell .lbl{display:inline; font-size:10px; text-transform:uppercase; letter-spacing:.06em;
     color:var(--ink-3); margin-right:4px}
   .r{text-align:left}
+}
+@media (max-width:860px){
+  .shell, .shell.open{grid-template-columns:minmax(0,1fr)}
+  .shell.open .pane{position:fixed; inset:0; height:100dvh; z-index:60; border-left:0;
+    padding-top:env(safe-area-inset-top,0px)}
   .detail-in{grid-template-columns:1fr}
 }
+@media (prefers-reduced-motion:reduce){.shell{transition:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 
@@ -191,6 +259,7 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
   </div>
 </header>
 
+<div class="shell" id="shell">
 <div class="wrap">
   <div class="summary" id="summary"></div>
 
@@ -222,6 +291,17 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
   </details>
 
   <footer id="foot"></footer>
+</div>
+
+<aside class="pane" id="pane" hidden aria-label="Oyun detayı">
+  <div class="pane-bar">
+    <button id="pane-close" title="Kapat (Esc)" aria-label="Kapat">✕</button>
+    <div class="who"><b id="pane-title"></b><span id="pane-sub"></span></div>
+    <button id="pane-prev" title="Önceki oyun (←)" aria-label="Önceki oyun">‹</button>
+    <button id="pane-next" title="Sonraki oyun (→)" aria-label="Sonraki oyun">›</button>
+  </div>
+  <div class="pane-body" id="pane-body"></div>
+</aside>
 </div>
 
 <script type="application/json" id="radar-data">__RADAR_DATA__</script>
@@ -355,7 +435,8 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
     const rev = g.revenueDailyEstimate;
     const win = g.downloads.windowDelta;
     return `
-      <button class="row" data-key="${g.key}" aria-expanded="${state.open===g.key}">
+      <div class="row${state.open === g.key ? ' active' : ''}" data-key="${g.key}"
+           role="button" tabindex="0" aria-label="${esc(g.title)} detayı">
         <span class="rank ${i < 3 ? 'top' : ''}">${i+1}</span>
         <span class="game">
           ${tile(g.title)}
@@ -363,8 +444,10 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
             <span class="name">${esc(g.title)}</span>
             <span class="sub">
               ${esc(g.publisher || '')}
-              ${g.platforms.ios ? '<span class="pf">iOS</span>' : ''}
-              ${g.platforms.android ? '<span class="pf a">AND</span>' : ''}
+              <span class="stores">
+                ${g.platforms.ios?.url ? `<a class="store" href="${esc(g.platforms.ios.url)}" target="_blank" rel="noopener" title="App Store sayfası">App Store ↗</a>` : ''}
+                ${g.platforms.android?.url ? `<a class="store play" href="${esc(g.platforms.android.url)}" target="_blank" rel="noopener" title="Google Play sayfası">Play ↗</a>` : ''}
+              </span>
               ${g.ageDays !== null ? `<span class="mono" style="font-size:10.5px">${g.ageDays}g</span>` : ''}
             </span>
           </span>
@@ -386,8 +469,7 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
         </span>
         <span class="cell c-tier"><span class="tier ${g.tier}">${TIER_LABELS[g.tier]}</span></span>
         <span class="cell c-cty r mono" title="Chart'ta olduğu ülke sayısı">${g.countryCount}<span class="lbl"> ülke</span></span>
-      </button>
-      ${state.open === g.key ? detailHtml(g) : ''}`;
+      </div>`;
   }
 
   function detailHtml(g) {
@@ -406,7 +488,33 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
     }).join('');
 
     const p = g.platforms;
-    return `<div class="detail"><div class="detail-in">
+    const dl = g.downloads.total;
+    return `
+      <div class="pane-hero">
+        ${tile(g.title)}
+        <div class="t">
+          <div class="name">${esc(g.title)}</div>
+          <div class="pub">${esc(g.publisher || '')}${g.ageDays !== null ? ' · ' + g.ageDays + ' günlük' : ''}</div>
+        </div>
+      </div>
+      <div class="pane-score">
+        <span class="big">${Math.round(g.hype)}</span>
+        <span>
+          <span class="tier ${g.tier}">${TIER_LABELS[g.tier]}</span>
+          <div style="font-size:11.5px;color:var(--ink-3);margin-top:3px">hype skoru · ${g.countryCount} ülkede chart'ta</div>
+        </span>
+      </div>
+      <div class="pane-kpi">
+        <div><span class="k">İndirme</span><span class="v">${dl ? (g.downloads.androidTotal !== null && !p.ios ? '' : '≈') + fmtCompact(dl) : '—'}</span></div>
+        <div><span class="k">Net IAP / gün</span><span class="v">${g.revenueDailyEstimate ? '≈' + fmtMoney(g.revenueDailyEstimate) : '—'}</span></div>
+        <div><span class="k">Net IAP / ay</span><span class="v">${g.revenueDailyEstimate ? '≈' + fmtMoney(g.revenueDailyEstimate * MONTH_DAYS) : '—'}</span></div>
+        <div><span class="k">En iyi hasılat sırası</span><span class="v">${g.bestGross ? '#' + g.bestGross : '—'}</span></div>
+      </div>
+      <div class="links" style="margin:0 0 20px">
+        ${p.ios?.url ? `<a href="${esc(p.ios.url)}" target="_blank" rel="noopener">App Store ↗</a>` : ''}
+        ${p.android?.url ? `<a href="${esc(p.android.url)}" target="_blank" rel="noopener">Google Play ↗</a>` : ''}
+      </div>
+      <div class="detail-in">
       <div>
         <h3>Skor kırılımı · kapsam ${Math.round(g.coverage*100)}%</h3>
         <div class="comp">${comps}</div>
@@ -422,10 +530,6 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
           <tr><td>Çıkış</td><td>${g.releasedAt ? esc(new Date(g.releasedAt).toLocaleDateString('tr-TR')) : '<span class="miss">—</span>'}</td></tr>
           <tr><td>Tür</td><td>${esc((g.genres||[]).filter(x=>x!=='Games').join(', ') || '—')}</td></tr>
         </tbody></table>
-        <div class="links">
-          ${p.ios?.url ? `<a href="${esc(p.ios.url)}" target="_blank" rel="noopener">App Store ↗</a>` : ''}
-          ${p.android?.url ? `<a href="${esc(p.android.url)}" target="_blank" rel="noopener">Google Play ↗</a>` : ''}
-        </div>
       </div>
       <div>
         <h3>Ülke bazında sıra</h3>
@@ -435,7 +539,7 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
           <tbody>${rows}</tbody>
         </table></div>
       </div>
-    </div></div>`;
+    </div>`;
   }
 
   function render() {
@@ -445,24 +549,89 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
       list.innerHTML = '<div class="empty">Bu filtrelerle eşleşen oyun yok.</div>';
       return;
     }
+    const shown = rows.slice(0, 250);
+    visibleKeys = shown.map((g) => g.key);   // panelin ileri/geri sırası listeyi takip eder
     list.innerHTML =
       `<div class="head">
         <span>#</span><span>Oyun</span><span>Hype</span><span class="r">İndirme</span>
         <span class="r">Net IAP</span><span>Kademe</span><span class="r">Ülke</span>
-      </div>` + rows.slice(0, 250).map(rowHtml).join('') +
+      </div>` + shown.map(rowHtml).join('') +
       (rows.length > 250 ? `<div class="empty">${rows.length - 250} oyun daha — aramayla daraltın.</div>` : '');
+    markActiveRow();
   }
 
   // ---- olaylar ----
+  // ---- yan panel ----
+  const shell = document.getElementById('shell');
+  const pane = document.getElementById('pane');
+  const paneBody = document.getElementById('pane-body');
+  let visibleKeys = [];   // panelde ileri/geri gezinmek için o anki filtrelenmiş sıra
+
+  function openPane(key) {
+    const g = G.find((x) => x.key === key);
+    if (!g) return;
+    state.open = key;
+    pane.hidden = false;
+    // hidden kaldırıldıktan hemen sonra sınıf eklenirse geçiş atlanıyor; bir kare bekle.
+    requestAnimationFrame(() => shell.classList.add('open'));
+    document.getElementById('pane-title').textContent = g.title ?? '';
+    document.getElementById('pane-sub').textContent =
+      [g.publisher, g.bestGross ? 'hasılat #' + g.bestGross : null].filter(Boolean).join(' · ');
+    paneBody.innerHTML = detailHtml(g);
+    paneBody.scrollTop = 0;
+    const i = visibleKeys.indexOf(key);
+    document.getElementById('pane-prev').disabled = i <= 0;
+    document.getElementById('pane-next').disabled = i < 0 || i >= visibleKeys.length - 1;
+    markActiveRow();
+  }
+
+  function closePane() {
+    state.open = null;
+    shell.classList.remove('open');
+    markActiveRow();
+    // geçiş bitmeden hidden verilirse panel anında kayboluyor
+    setTimeout(() => { if (!state.open) pane.hidden = true; }, 420);
+  }
+
+  function stepPane(delta) {
+    const i = visibleKeys.indexOf(state.open);
+    const next = visibleKeys[i + delta];
+    if (next) openPane(next);
+  }
+
+  function markActiveRow() {
+    for (const el of document.querySelectorAll('.row')) {
+      el.classList.toggle('active', el.dataset.key === state.open);
+    }
+  }
+
   document.getElementById('list').addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;   // mağaza butonları paneli açmasın
     const row = e.target.closest('.row');
     if (!row) return;
-    state.open = state.open === row.dataset.key ? null : row.dataset.key;
-    render();
+    if (state.open === row.dataset.key) closePane(); else openPane(row.dataset.key);
+  });
+  document.getElementById('list').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const row = e.target.closest('.row');
+    if (!row || e.target.closest('a')) return;
+    e.preventDefault();
+    openPane(row.dataset.key);
+  });
+  document.getElementById('pane-close').addEventListener('click', closePane);
+  document.getElementById('pane-prev').addEventListener('click', () => stepPane(-1));
+  document.getElementById('pane-next').addEventListener('click', () => stepPane(1));
+  document.addEventListener('keydown', (e) => {
+    if (!state.open) return;
+    if (e.target.matches('input, select, textarea')) return;
+    if (e.key === 'Escape') closePane();
+    else if (e.key === 'ArrowLeft') stepPane(-1);
+    else if (e.key === 'ArrowRight') stepPane(1);
   });
   document.getElementById('tabs').addEventListener('click', (e) => {
     const t = e.target.closest('.tab'); if (!t) return;
-    state.view = t.dataset.view; state.open = null;
+    state.view = t.dataset.view;
+    if (state.open) closePane();
     [...document.querySelectorAll('.tab')].forEach(x => x.setAttribute('aria-selected', String(x === t)));
     persist(); render();
   });
