@@ -54,7 +54,12 @@ export function buildReport() {
   // (CI runner'ı, yeni klon, worktree) DB yoktur ama snapshot dosyaları repo'dadır.
   // İçe aktarma tekrar-güvenli; yüklü snapshot'ı atlar.
   const restored = importSnapshots(db);
-  if (restored.loaded) linkStores(db);
+  // Eşleştirmeyi yalnızca "yeni snapshot geldiyse" çalıştırmak yetmiyor: DB zaten
+  // doluysa (ör. önce calibrate-revenue.js koştuysa) app_links boş kalıyor, her
+  // oyun iki satıra bölünüyor ve geliri platformlara bölünmüş görünüyor —
+  // sessiz ve büyük bir hata. Bağlantı yoksa her hâlükârda kur.
+  const linkCount = db.prepare('SELECT COUNT(*) n FROM app_links').get().n;
+  if (restored.loaded || linkCount === 0) linkStores(db);
 
   const { snapshot, prev, windowDays, scored } = computeScores(db);
 
@@ -161,8 +166,21 @@ export function buildReport() {
     calibration: { installsPerRating: Math.round(installsPerRating * 10) / 10, pairs: pairs.length },
     methodology: {
       measured: ['chart sırası (App Store + Google Play)', 'Play kümülatif kurulum', 'rating sayısı/puanı', 'Play IAP fiyat aralığı', 'çıkış/güncelleme tarihi'],
-      estimated: ['iOS indirme (rating x kalibre oran)', 'günlük gelir (grossing sırası güç yasası modeli)'],
-      note: 'Gelir verisini hiçbir mağaza ücretsiz vermiyor; gelir sütunu modeldir, ölçüm değildir.',
+      estimated: [
+        'iOS indirme (rating x kalibre oran)',
+        'günlük net IAP geliri (hasılat sırası güç yasası modeli, 15 sektör tahminine kalibre)',
+      ],
+      note: 'Gelir verisini hiçbir mağaza ücretsiz vermiyor; gelir sütunu modeldir, ölçüm değildir. '
+          + 'Net IAP geliri tahmin edilir: mağaza komisyonu düşülmüş, reklam ve web-shop geliri hariç. '
+          + 'Sağlayıcılar aynı oyun için ~%40 farklı rakam verdiğinden mutlak belirsizlik en az ±%40; '
+          + 'oyunları birbirine göre kıyaslamak için kullanın, mutlak rakama değil.',
+      revenueCalibration: {
+        anchors: 15,
+        period: '2026-08',
+        medianRatio: 1.01,
+        within2x: '15/15',
+        note: 'Kalibrasyon öncesi medyan oran 0,50× idi (sistematik 2 kat düşük tahmin).',
+      },
     },
     counts: {
       games: games.length,

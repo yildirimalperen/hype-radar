@@ -55,14 +55,41 @@ Bu ayrım panelde de görünür — tahmini sayılar `≈` ve kesikli altı çiz
 - **iOS indirme** — Apple indirme vermiyor. Sabit katsayı gömülü değil: her taramada
   iOS↔Android eşleşmiş oyunlardan medyan `kurulum / değerlendirme` oranı hesaplanıp
   iOS değerlendirme sayısına uygulanır. (İlk koşu: 387 çiftten 1 değerlendirme ≈ 40,8 indirme.)
-- **Günlük gelir** — hiçbir mağaza ücretsiz vermiyor. Hasılat sırasından güç yasası ile
-  modellenir: `gün_geliri ≈ 800.000 × sıra^-0,80`, ülke pazar ağırlığı ve platform ARPU farkıyla
-  ölçeklenir (`src/estimate.js`). **Bu bir model, ölçüm değil.** Zirvedeki birkaç oyunda
-  gerçeğin altında kalma eğilimindedir; büyüklük mertebesi doğru, kesin rakam değil.
-  Ücretsiz oyunlarda gelir pratikte IAP geliridir.
+- **Günlük net IAP geliri** — hiçbir mağaza ücretsiz vermiyor. Hasılat sırasından güç yasası
+  ile modellenir: `gün_geliri ≈ 1.624.000 × sıra^-0,80`, ülke pazar ağırlığı ve platform ARPU
+  farkıyla ölçeklenir (`src/estimate.js`). **Bu bir model, ölçüm değil.**
 
-Gerçek gelir rakamı gerekirse tek değişiklik noktası `src/estimate.js` — oraya
-Sensor Tower / Appfigures gibi ücretli bir sağlayıcı bağlanabilir, radarın geri kalanı aynı kalır.
+### Gelir modelinin kalibrasyonu
+
+Sabitler kafadan atılmıyor; ölçülen bir hataya bağlı (`src/calibrate-revenue.js`).
+
+2026-08 dönemine ait **15 üçüncü taraf gelir tahmini** çapa olarak kullanıldı
+(`data/calibration/revenue-anchors.json`). Sonuç:
+
+| | önce | sonra |
+|---|---|---|
+| medyan model/bildirilen oranı | 0,50× | **1,01×** |
+| 2 kat içinde kalan çapa | 7/15 | **15/15** |
+| log-RMSE | 0,734 | **0,192** |
+
+Yani model sistematik olarak **2 kat düşük** tahmin ediyormuş; düzeltilen ölçek (`A`) oldu.
+**Eğim (`b`) değiştirilmedi** — çapaların 14'ü ilk 10 sırada olduğu için eğimi neredeyse hiç
+kısıtlamıyorlar (hata `b` boyunca düz). Serbest fit eğimi 0,666'ya yatırıyor ama bu bir kanıt
+değil, alt sıra verisinin yokluğunun yan etkisi: elimizdeki tek alt-sıra çapasında hatayı
+1,40×'ten 1,72×'e **çıkarıyor**.
+
+Bilinen sınırlar:
+- **Sağlayıcılar birbirine ~%40 uymuyor.** Royal Match 2026-08: bir kaynakta $108,8M, diğerinde
+  $66,5M — ve oran tüm oyunlarda ~0,6 sabit. Şekil konusunda hemfikirler, seviye konusunda değil.
+  Mutlak belirsizlik en az ±%40.
+- **İlk 20 dışı ekstrapolasyon.** Kamuya açık rakamlar tepede yoğunlaşıyor; alt sıralar için
+  tek düşük-güvenli çapamız var.
+- **Çapalar da tahmin.** AppMagic/Sensor Tower yayıncı beyanı değil. "Gerçeğe uyum" değil,
+  "sektör tahminleriyle tutarlılık" ölçüyoruz.
+
+Çapa eklemek: `data/calibration/revenue-anchors.json`'a satır ekleyip
+`node src/calibrate-revenue.js` koşturun — hatanın düştüğünü görün, sonra `--write`.
+Ücretli bir sağlayıcıya geçilecekse tek değişiklik noktası yine `src/estimate.js`.
 
 ---
 
@@ -111,6 +138,7 @@ src/link.js            iOS <-> Android eşleştirme
 src/collect.js         toplama orkestrasyonu -> snapshot
 src/score.js           hype skoru
 src/estimate.js        TAHMİN katmanı (gelir modeli, indirme kalibrasyonu)
+src/calibrate-revenue.js  gelir eğrisini çapalara fit eder + hata raporu
 src/snapshot-io.js     snapshot dışa/içe aktarma (repo'da taşınan geçmiş)
 src/report.js          çapraz-platform birleştirme -> data/radar.json
 src/publish.js         panel HTML üretimi

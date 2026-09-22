@@ -1,10 +1,33 @@
 // TAHMİN KATMANI — burada üretilen hiçbir sayı ölçülmüş değildir.
 // Gelir verisini ücretsiz veren mağaza yok; grossing sırasından modelleniyor.
 // Tüm sabitler burada ve tek yerde ayarlanabilir. Çıktıda source='estimated' etiketi taşır.
+//
+// Kalibrasyon: data/calibration/revenue-anchors.json + src/calibrate-revenue.js.
+// Sabitleri elle oynatmayın; çapa ekleyip fit'i yeniden koşturun ki değişiklik
+// ölçülmüş bir hata düşüşüne dayansın.
+//
+// ARTIK BİLİNEN BELİRSİZLİK: sağlayıcılar aynı oyun ve ay için ~%40 farklı
+// rakam veriyor (ör. Royal Match 2026-08: bir kaynakta $108,8M, diğerinde $66,5M;
+// oran tüm oyunlarda ~0,6 sabit). Yani eğrinin ŞEKLİ konusunda hemfikirler,
+// SEVİYESİ konusunda değil. Model AppMagic seviyesine kalibre; mutlak rakamın
+// taban belirsizliği en az ±%40'tır.
 
 // ABD iOS top-grossing oyun geliri için güç yasası: gün_geliri ≈ A * rank^(-b)
-// Çapa noktaları: #1 ≈ $800k/gün, #100 ≈ $20k/gün  =>  b = ln(40)/ln(100) ≈ 0.80
-export const REV_CURVE = { A: 800_000, b: 0.80 };
+//
+// NE TAHMİN EDİYOR: net IAP geliri — mağaza komisyonu düşülmüş, reklam geliri ve
+// web-shop/D2C harcaması HARİÇ. Bu tanım çapa kaynaklarının tanımıdır.
+//
+// A (ölçek), 2026-08 dönemine ait 15 üçüncü taraf gelir tahminine fit edildi
+// (`node src/calibrate-revenue.js`). Öncesi A=800.000 idi ve sistematik olarak
+// 2 kat düşük tahmin ediyordu: medyan oran 0,50×, çapaların 7/15'i 2 kat içinde.
+// Sonrası: medyan 1,01×, 15/15 çapa 2 kat içinde, log-RMSE 0,734 -> 0,192.
+//
+// b (eğim) DEĞİŞTİRİLMEDİ. Çapaların 14'ü ilk 10 sırada olduğu için eğimi
+// neredeyse hiç kısıtlamıyorlar — hata b boyunca düz (bkz. eğim taraması).
+// Serbest fit b'yi 0,666'ya yatırıyor ama bu bir kanıt değil, alt sıra verisinin
+// yokluğunun yan etkisi: tek alt-sıra çapasında hatayı 1,40×'ten 1,72×'e ÇIKARIYOR.
+// Eğimi değiştirmek için ilk 20 dışından gerçek veri gerekir.
+export const REV_CURVE = { A: 1_624_000, b: 0.8 };
 
 // Ülke pazar çarpanı (ABD = 1.0). Mağaza geliri büyüklüğüne göre kaba ölçek.
 export const COUNTRY_REV_WEIGHT = {

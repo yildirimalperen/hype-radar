@@ -1,0 +1,53 @@
+{
+  "_comment": [
+    "Gelir modelinin kalibrasyon çapaları. Bu dosya ELLE güncellenir.",
+    "",
+    "NE OLDUĞU: üçüncü taraf (AppMagic / Sensor Tower) AYLIK GELİR TAHMİNLERİ.",
+    "Yayıncının açıkladığı gerçek rakam DEĞİL. Yani model bu sayılara fit edilince",
+    "'gerçeği' değil 'sektör tahminleriyle tutarlılığı' yakalamış olur.",
+    "",
+    "KAPSAM: bu rakamlar IAP geliridir; reklam geliri, web-shop/D2C harcaması ve",
+    "Çin Android ekosistemi HARİÇ, mağaza komisyonu düşülmüş (net).",
+    "Dolayısıyla modelimiz de bu tanımı hedefler: net IAP geliri.",
+    "",
+    "DIŞLANANLAR: geliri bizim taramadığımız pazarlarda yoğunlaşan oyunlar çapa",
+    "olamaz — model onları yapısal olarak göremez, fit'i bozarlar.",
+    "",
+    "Yeni çapa eklerken: store_id'leri data/radar.db'den doğrula, kaynağı ve",
+    "dönemi yaz, sonra `node src/calibrate-revenue.js` ile yeniden fit et."
+  ],
+
+  "period": "2026-08",
+  "revenueBasis": "net-iap-excl-ads-d2c-china-android",
+  "collectedAt": "2026-09-22",
+
+  "anchors": [
+    { "name": "Gossip Harbor",     "monthlyUsd": 112300000, "ios": "1623318294", "android": "com.mergegames.gossipharbor", "source": "appmagic-2026-08" },
+    { "name": "Royal Match",       "monthlyUsd": 108800000, "ios": "1482155847", "android": "com.dreamgames.royalmatch",   "source": "appmagic-2026-08" },
+    { "name": "Roblox",            "monthlyUsd": 100600000, "ios": "431946152",  "android": "com.roblox.client",           "source": "appmagic-2026-08" },
+    { "name": "Whiteout Survival", "monthlyUsd":  96900000, "ios": "6443575749", "android": "com.gof.global",              "source": "appmagic-2026-08" },
+    { "name": "MONOPOLY GO!",      "monthlyUsd":  95000000, "ios": "1621328561", "android": "com.scopely.monopolygo",      "source": "mobilegamer-2026-08" },
+    { "name": "Candy Crush Saga",  "monthlyUsd":  86000000, "ios": "553834731",  "android": "com.king.candycrushsaga",     "source": "mobilegamer-2026-08" },
+    { "name": "Kingshot",          "monthlyUsd":  78100000, "ios": "6739554056", "android": "com.run.tower.defense",       "source": "appmagic-2026-08" },
+    { "name": "eFootball",         "monthlyUsd":  58000000, "ios": "1117270703", "android": "jp.konami.pesam",             "source": "mobilegamer-2026-08" },
+    { "name": "Last War: Survival","monthlyUsd":  56700000, "ios": "6448786147", "android": "com.fun.lastwar.gp",          "source": "appmagic-2026-08" },
+    { "name": "Coin Master",       "monthlyUsd":  50300000, "ios": "406889139",  "android": "com.moonactive.coinmaster",   "source": "mobilegamer-2026-08" },
+    { "name": "Pokémon GO",        "monthlyUsd":  50200000, "ios": "1094591345", "android": "com.nianticlabs.pokemongo",   "source": "appmagic-2026-08" },
+    { "name": "Township",          "monthlyUsd":  42600000, "ios": "638689075",  "android": "com.playrix.township",        "source": "mobilegamer-2026-08" },
+    { "name": "Gardenscapes",      "monthlyUsd":  40300000, "ios": "1105855019", "android": "com.playrix.gardenscapes",    "source": "mobilegamer-2026-08" },
+    { "name": "Royal Kingdom",     "monthlyUsd":  38900000, "ios": "1606549505", "android": "com.dreamgames.royalkingdom", "source": "mobilegamer-2026-08" },
+
+    { "name": "Evony: The King's Return", "monthlyUsd": 11500000, "ios": "1098157959", "android": "com.topgamesinc.evony",
+      "source": "apprank/sensortower-2026-06", "confidence": "low",
+      "note": "Farklı dönem ve kaynak; iki tahmin 8-15M arasında, ortası alındı. İlk 20 dışındaki TEK çapa — eğimi kısıtlayan yegâne nokta, bu yüzden düşük güvenle de olsa tutuluyor." }
+  ],
+
+  "excluded": [
+    { "name": "Honor of Kings",  "monthlyUsd": 152700000, "reason": "Geliri Çin'de yoğun; bizim 8 ülkede yalnız br#56 görünüyor. Model yapısal olarak göremez." },
+    { "name": "PUBG Mobile",     "monthlyUsd": 109900000, "reason": "Çin + Hindistan ağırlıklı; ABD hasılat sırası #54, taramamız geliri temsil etmiyor." },
+    { "name": "Delta Force",     "monthlyUsd":  51100000, "reason": "Taradığımız hiçbir ülkede hasılat chart'ında yok." },
+    { "name": "Valorant Mobile", "monthlyUsd":  37600000, "reason": "Taradığımız hiçbir ülkede hasılat chart'ında yok." },
+    { "name": "Free Fire Max",   "monthlyUsd":  38300000, "reason": "Hindistan/GD Asya ağırlıklı; yalnız Brezilya'yı yakalıyoruz." },
+    { "name": "Fate/Grand Order","monthlyUsd":  40400000, "reason": "Neredeyse tamamen Japonya. Tek pazarlık oyun eğriyi değil ülke ağırlığını test eder, fit'i karıştırır." }
+  ]
+}
