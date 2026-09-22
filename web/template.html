@@ -374,8 +374,8 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
           ${win ? `<br><span class="delta up">+${fmtCompact(win)}</span>` : ''}
         </span>
         <span class="cell c-rev r">
-          <span class="lbl">Gelir/gün</span>
-          ${rev ? `<span class="est" title="Grossing sırasından modellenmiş tahmin">≈${fmtMoney(rev)}</span>`
+          <span class="lbl">Net IAP/gün</span>
+          ${rev ? `<span class="est" title="Hasılat sırasından modellenmiş net IAP geliri tahmini. 15 sektör tahminine kalibre; belirsizlik en az ±%40.">≈${fmtMoney(rev)}</span>`
                 : '<span style="color:var(--ink-3)">—</span>'}
         </span>
         <span class="cell c-tier"><span class="tier ${g.tier}">${TIER_LABELS[g.tier]}</span></span>
@@ -440,7 +440,7 @@ footer{margin-top:22px; color:var(--ink-3); font-size:11.5px; text-align:center}
     list.innerHTML =
       `<div class="head">
         <span>#</span><span>Oyun</span><span>Hype</span><span class="r">İndirme</span>
-        <span class="r">Gelir/gün</span><span>Kademe</span><span class="r">Ülke</span>
+        <span class="r">Net IAP/gün</span><span>Kademe</span><span class="r">Ülke</span>
       </div>` + rows.slice(0, 250).map(rowHtml).join('') +
       (rows.length > 250 ? `<div class="empty">${rows.length - 250} oyun daha — aramayla daraltın.</div>` : '');
   }
