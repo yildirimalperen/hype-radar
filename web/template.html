@@ -93,6 +93,7 @@ input[type="search"]{flex:1 1 180px; max-width:260px}
   white-space:nowrap; border-bottom:1px solid var(--line-2); padding-bottom:1px}
 .store:hover{color:var(--heat); border-color:var(--heat)}
 .store.play:hover{color:var(--money); border-color:var(--money)}
+.age{font-size:11px; color:var(--ink-3); white-space:nowrap}
 
 .hp{display:flex; align-items:center; gap:9px}
 .hp .v{font-family:"Bricolage Grotesque",sans-serif; font-weight:600; font-size:16px;
@@ -244,6 +245,10 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+  // Yaş: 30 günden genç oyunlarda gün anlamlı, sonrasında ay okunur kalıyor.
+  const age = (d) => d === null || d === undefined ? null
+    : (d < 30 ? d + 'd' : Math.round(d / MONTH) + 'm');
+
   // Mağaza ikonları CSP'den geçmiyor; başlıktan deterministik renkli karo üretiyoruz.
   const tile = (title) => {
     const t = String(title ?? '?');
@@ -332,6 +337,7 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
               <span class="pub">${esc(g.publisher || '')}</span>
               ${p.ios?.url ? `<a class="store" href="${esc(p.ios.url)}" target="_blank" rel="noopener">App Store</a>` : ''}
               ${p.android?.url ? `<a class="store play" href="${esc(p.android.url)}" target="_blank" rel="noopener">Play</a>` : ''}
+              ${g.ageDays !== null ? `<span class="age mono" title="Çıkışından bu yana ${g.ageDays} gün">${age(g.ageDays)}</span>` : ''}
             </span>
           </span>
         </span>
