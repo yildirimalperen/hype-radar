@@ -2,9 +2,10 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { openDb } from './db.js';
 import { computeScores, WEIGHTS } from './score.js';
-import { COUNTRIES } from './config.js';
+import { COUNTRIES, SCORE_WINDOW_DAYS } from './config.js';
 import { estimateDailyRevenue, calibrateInstallsPerRating, estimateIosInstalls } from './estimate.js';
 import { importSnapshots } from './snapshot-io.js';
+import { appendScores, loadScores } from './history.js';
 import { linkStores } from './link.js';
 
 const OUT = resolve(import.meta.dirname, '../data/radar.json');
@@ -109,7 +110,8 @@ export function buildReport() {
 
     // --- gelir (TAHMİN) ---
     const revenue = members.reduce((sum, m) => {
-      const r = estimateDailyRevenue(m.app.store, m.ranks);
+      // Alt tür sıraları gelir modeline GİRMEZ (bkz. score.js açıklaması).
+      const r = estimateDailyRevenue(m.app.store, m.ranks.filter((x) => (x.scope ?? 'all') === 'all'));
       return r === null ? sum : sum + r;
     }, 0) || null;
 
@@ -155,6 +157,23 @@ export function buildReport() {
   });
 
   games.sort((a, b) => b.hype - a.hype);
+
+  // --- trend serisi ---
+  // Skorlar ayrı seride birikiyor; oyun anahtarı platformlar birleştikten sonra
+  // oluştuğu için burada yazılıyor. Tek ölçüm varken trend çizilmez, panel
+  // "kaç ölçüm birikti" der — sahte bir çizgi göstermektense.
+  const day = snapshot.taken_at.slice(0, 10);
+  appendScores(day, games.map((g) => ({ key: g.key, hype: g.hype, rev: g.revenueDailyEstimate })));
+  const scoreSeries = loadScores();
+  for (const g of games) {
+    const s = scoreSeries.get(g.key) ?? [];
+    g.trend = s.slice(-60).map((x) => ({ d: x.d, h: x.h, v: x.v }));
+    // Kümülatif gelir: günlük MODEL tahminlerinin toplamı. Ölçüm değil,
+    // modelin birikimi — hata da birlikte birikiyor, panelde öyle etiketli.
+    g.revenueCumulativeEstimate = s.length
+      ? Math.round(s.reduce((sum, x) => sum + (x.v ?? 0), 0) * (SCORE_WINDOW_DAYS))
+      : null;
+  }
 
   const report = {
     generatedAt: new Date().toISOString(),

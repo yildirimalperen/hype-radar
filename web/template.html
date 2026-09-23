@@ -155,6 +155,21 @@ input[type="search"]{flex:1 1 180px; max-width:260px}
 .method h5{margin:0 0 7px; font-size:12px; font-weight:600; color:var(--ink-3)}
 .method ul{margin:0; padding-left:16px} .method li{margin-bottom:4px}
 .method code{font-family:"IBM Plex Mono",monospace; font-size:11.5px}
+/* sütun kaynağı */
+.i{appearance:none; border:0; background:none; color:var(--line-2); cursor:pointer;
+  font-size:10px; padding:0 0 0 3px; line-height:1; vertical-align:middle}
+.i:hover,.i[aria-expanded="true"]{color:var(--heat)}
+.infobar{border-bottom:1px solid var(--line); background:var(--sunk); padding:11px 8px;
+  font-size:12.5px; color:var(--ink-2); display:flex; gap:8px; align-items:baseline}
+.infobar b{color:var(--ink); font-weight:600; flex:none}
+.infobar .src{color:var(--ink-3)}
+
+/* trend */
+.spark{display:block; width:100%; height:44px; overflow:visible}
+.spark path{fill:none; stroke:var(--heat); stroke-width:1.5}
+.spark .area{fill:var(--heat-soft); stroke:none}
+.spark circle{fill:var(--heat)}
+.trendnote{font-size:12px; color:var(--ink-3); margin-top:6px}
 .empty{padding:44px 8px; text-align:center; color:var(--ink-3)}
 footer{margin-top:28px; color:var(--ink-3); font-size:12px}
 
@@ -230,6 +245,17 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
     youth:            ['Yaş', 'Çıkışından bu yana geçen süre'],
   };
   const TIERS = { breakout:'Patlama', rising:'Yükselen', established:'Zirve', watch:'İzlemede' };
+
+  // Sütun başına kaynak: [başlık, açıklama]. AppMagic'in sütun başlıklarındaki
+  // ⓘ ile aynı işi görüyor — hangi sayı ölçüm, hangisi model, nereden geliyor.
+  const SOURCES = {
+    game: ['Oyun', 'App Store ve Google Play chart’larından. Detaylar iTunes Lookup ve Play uygulama sayfasından. ÖLÇÜM.'],
+    hype: ['Hype skoru', '7 bileşenden hesaplanır; her biri kohort içi yüzdelik sıraya çevrilir. Ölçülemeyen bileşenin ağırlığı dağıtılır, satır kapsam oranıyla cezalanır. HESAPLANAN.'],
+    dl:   ['İndirme', 'Android: Play’in verdiği kümülatif kurulum — ÖLÇÜM. iOS: Apple indirme vermiyor, değerlendirme sayısı × her taramada eşleşmiş oyunlardan hesaplanan medyan oran — TAHMİN.'],
+    rev:  ['Net IAP geliri', 'Hasılat chart sırasından güç yasasıyla modellenir, ülke ve platform katsayılarıyla ölçeklenir. 15 sektör tahminine kalibre. Mağaza komisyonu düşülmüş; reklam ve web-shop hariç. TAHMİN, belirsizlik en az ±%40.'],
+    tier: ['Kademe', 'Patlama: 180 günden genç ve hype ≥ 60. Yükselen: hype ≥ 45. Zirve: bir ülkede hasılat ilk 20. Kural tabanlı.'],
+    cty:  ['Ülke', 'Oyunun herhangi bir chart’ta göründüğü ülke sayısı. ÖLÇÜM.'],
+  };
 
   const nf = new Intl.NumberFormat('tr-TR');
   const num = (n) => {
@@ -409,6 +435,8 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
       <div>
         <h4>Skor kırılımı · kapsam %${Math.round(g.coverage * 100)}</h4>
         <div class="comp">${comps}</div>
+        <h4 style="margin-top:18px">Hype trendi</h4>
+        ${spark(g.trend)}
       </div>
       <div>
         <h4>Mağaza verisi</h4>
@@ -416,6 +444,8 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
           <tr><td>Play kurulum (ölçüm)</td><td>${num(g.downloads.androidTotal) ?? '<span class="miss">—</span>'}</td></tr>
           <tr><td>iOS indirme (tahmin)</td><td class="est">${num(g.downloads.iosTotalEstimate) ?? '<span class="miss">—</span>'}</td></tr>
           <tr><td>Net IAP (tahmin)</td><td class="est">${rev0(g)}</td></tr>
+          ${g.revenueCumulativeEstimate ? `<tr><td>Radar başından beri (model toplamı)</td>
+            <td class="est" title="Günlük model tahminlerinin toplamı. Ölçüm değil; hata da birlikte birikir.">${usd(g.revenueCumulativeEstimate)}</td></tr>` : ''}
           <tr><td>IAP aralığı</td><td>${esc(g.iapRange || '—')}</td></tr>
           <tr><td>iOS puan</td><td>${rate(p.ios)}</td></tr>
           <tr><td>Android puan</td><td>${rate(p.android)}</td></tr>
@@ -436,6 +466,34 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
       </div>
     </div>`;
   }
+  /**
+   * Hype trendi. 3 ölçümden azken çizmiyoruz — iki noktadan geçen doğru
+   * "trend" değil, sahte kesinlik olur. Bunun yerine kaç ölçüm biriktiği yazılır.
+   */
+  function spark(trend) {
+    const pts = (trend ?? []).filter((p) => Number.isFinite(p.h));
+    if (pts.length < 3) {
+      return `<div class="trendnote">${pts.length} ölçüm birikti — trend için en az 3 gerekiyor.
+        Her tarama bir nokta ekler (2 günde bir).</div>`;
+    }
+    const W = 240, H = 44, lo = Math.min(...pts.map((p) => p.h)), hi = Math.max(...pts.map((p) => p.h));
+    const span = hi - lo || 1;
+    const xy = pts.map((p, i) => [
+      (i / (pts.length - 1)) * W,
+      H - ((p.h - lo) / span) * (H - 6) - 3,
+    ]);
+    const line = xy.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join('');
+    const last = xy.at(-1);
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img"
+        aria-label="Hype trendi: ${pts.map((p) => Math.round(p.h)).join(', ')}">
+        <path class="area" d="${line}L${W},${H}L0,${H}Z"/>
+        <path d="${line}"/>
+        <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.5"/>
+      </svg>
+      <div class="trendnote">${pts.length} ölçüm · ${esc(pts[0].d)} → ${esc(pts.at(-1).d)} ·
+        hype ${Math.round(pts[0].h)} → ${Math.round(pts.at(-1).h)}</div>`;
+  }
+
   const rev0 = (g) => g.revenueDailyEstimate
     ? `${usd(g.revenueDailyEstimate)}/gün · ${usd(g.revenueDailyEstimate * MONTH)}/ay`
     : '<span class="miss">—</span>';
@@ -444,11 +502,14 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
     const rows = visible();
     const list = document.getElementById('list');
     if (!rows.length) { list.innerHTML = '<div class="empty">Bu filtrelerle eşleşen oyun yok.</div>'; return; }
+    const info = (key, label, cls = '') =>
+      `<span class="${cls}">${label}<button class="i" data-info="${key}" aria-expanded="false"
+        aria-label="${esc(SOURCES[key][0])} kaynağı" title="${esc(SOURCES[key][1])}">ⓘ</button></span>`;
     list.innerHTML =
       `<div class="hrow">
-        <span></span><span>Oyun</span><span>Hype</span><span class="r">İndirme</span>
-        <span class="r">Net IAP</span><span>Kademe</span><span class="r">Ülke</span>
-      </div>` + rows.slice(0, 250).map(rowHtml).join('') +
+        <span></span>${info('game', 'Oyun')}${info('hype', 'Hype')}${info('dl', 'İndirme', 'r')}
+        ${info('rev', 'Net IAP', 'r')}${info('tier', 'Kademe')}${info('cty', 'Ülke', 'r')}
+      </div><div class="infobar" id="infobar" hidden></div>` + rows.slice(0, 250).map(rowHtml).join('') +
       (rows.length > 250 ? `<div class="empty">${rows.length - 250} oyun daha — aramayla daraltın.</div>` : '');
   }
 
@@ -456,6 +517,18 @@ footer{margin-top:28px; color:var(--ink-3); font-size:12px}
   const list = document.getElementById('list');
   const toggle = (key) => { state.open = state.open === key ? null : key; render(); };
   list.addEventListener('click', (e) => {
+    const info = e.target.closest('.i');
+    if (info) {
+      const bar = document.getElementById('infobar');
+      const same = bar.dataset.key === info.dataset.info && !bar.hidden;
+      document.querySelectorAll('.i').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+      if (same) { bar.hidden = true; bar.dataset.key = ''; return; }
+      const [label, text] = SOURCES[info.dataset.info];
+      bar.innerHTML = `<b>${esc(label)}</b><span class="src">${esc(text)}</span>`;
+      bar.hidden = false; bar.dataset.key = info.dataset.info;
+      info.setAttribute('aria-expanded', 'true');
+      return;
+    }
     if (e.target.closest('a')) return;          // mağaza linkleri satırı açmasın
     const row = e.target.closest('.row');
     if (row) toggle(row.dataset.key);

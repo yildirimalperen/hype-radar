@@ -35,10 +35,15 @@ function modelDaily(ranksByStore, A, b) {
 /** Çapaların hasılat sıralarını en güncel snapshot'tan toplar. */
 function loadAnchorRanks(db, anchors) {
   const snap = db.prepare("SELECT id, taken_at FROM snapshots WHERE status='ok' ORDER BY id DESC LIMIT 1").get();
+  // scope = 'all' ŞART: üretimdeki gelir modeli yalnız genel chart sıralarını
+  // kullanıyor. Kalibrasyon farklı girdiyle çalışırsa fit ettiği sabit yanlış
+  // olur — alt tür sıraları dahilken model 4 kat şişiyor ve A o kadar düşük
+  // fit ediliyordu.
   const stmt = db.prepare(`
     SELECT r.country, r.rank FROM ranks r
     JOIN apps a ON a.id = r.app_id
-    WHERE r.snapshot_id = ? AND r.chart = 'grossing' AND a.store = ? AND a.store_id = ?`);
+    WHERE r.snapshot_id = ? AND r.chart = 'grossing' AND r.scope = 'all'
+      AND a.store = ? AND a.store_id = ?`);
 
   const out = [];
   for (const a of anchors) {
@@ -88,20 +93,17 @@ function fitScale(rows, b) {
   return { ...best, b };
 }
 
-/** Serbest fit: A ve b birlikte. */
+/**
+ * Serbest fit: A ve b birlikte.
+ * İki boyutlu kaba ızgara yerel bir noktaya takılıyordu — sabit eğimli fit'ten
+ * DAHA KÖTÜ sonuç bildiriyordu ki bu matematiksel olarak imkânsız. Onun yerine
+ * eğimi ince adımlarla tarayıp her adımda ölçeği tek boyutlu (sağlam) arıyoruz.
+ */
 function fitFree(rows) {
   let best = { A: REV_CURVE.A, b: REV_CURVE.b, err: logError(rows, REV_CURVE.A, REV_CURVE.b) };
-  let aLo = 100_000, aHi = 20_000_000, bLo = 0.3, bHi = 2.0;
-  for (let pass = 0; pass < 6; pass++) {
-    const aStep = (aHi - aLo) / 40, bStep = (bHi - bLo) / 40;
-    for (let A = aLo; A <= aHi; A += aStep) {
-      for (let b = bLo; b <= bHi; b += bStep) {
-        const err = logError(rows, A, b);
-        if (err < best.err) best = { A, b, err };
-      }
-    }
-    aLo = Math.max(10_000, best.A - aStep * 2); aHi = best.A + aStep * 2;
-    bLo = Math.max(0.05, best.b - bStep * 2);   bHi = best.b + bStep * 2;
+  for (let b = 0.30; b <= 2.0; b += 0.005) {
+    const { A, err } = fitScale(rows, b);
+    if (err < best.err) best = { A, b, err };
   }
   return best;
 }

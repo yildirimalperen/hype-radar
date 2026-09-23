@@ -10,7 +10,10 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, unlinkSync } from 
 import { resolve, join } from 'node:path';
 
 export const SNAPSHOT_DIR = resolve(import.meta.dirname, '../data/snapshots');
-export const RETENTION = 90; // dosya sayısı; 2 günde bir koşuda ~6 ay geçmiş
+// Tam snapshot yalnız ivme kıyası için gerekiyor (pencere 2 gün), uzun trend
+// data/history/ içinde kompakt tutuluyor. Kapsam 11 kata çıkınca her dosya
+// megabaytlara çıktığı için saklama kısaldı: 12 dosya ~ 24 gün.
+export const RETENTION = 12;
 
 export function exportSnapshot(db, snapshotId) {
   const snap = db.prepare('SELECT * FROM snapshots WHERE id = ?').get(snapshotId);
@@ -24,7 +27,7 @@ export function exportSnapshot(db, snapshotId) {
        OR a.id IN (SELECT app_id FROM app_metrics WHERE snapshot_id = ?)`).all(snapshotId, snapshotId);
 
   const ranks = db.prepare(`
-    SELECT a.store, a.store_id, r.country, r.chart, r.rank
+    SELECT a.store, a.store_id, r.country, r.chart, r.scope, r.rank
     FROM ranks r JOIN apps a ON a.id = r.app_id WHERE r.snapshot_id = ?`).all(snapshotId);
 
   const metrics = db.prepare(`
@@ -32,11 +35,13 @@ export function exportSnapshot(db, snapshotId) {
            m.installs_bucket, m.iap_range, m.price, m.version, m.updated_at
     FROM app_metrics m JOIN apps a ON a.id = m.app_id WHERE m.snapshot_id = ?`).all(snapshotId);
 
-  const payload = { version: 1, takenAt: snap.taken_at, note: snap.note, apps, ranks, metrics };
+  const payload = { version: 2, takenAt: snap.taken_at, note: snap.note, coverage: snap.coverage ?? null, apps, ranks, metrics };
   mkdirSync(SNAPSHOT_DIR, { recursive: true });
   const file = join(SNAPSHOT_DIR, `${snap.taken_at.slice(0, 19).replace(/[:T]/g, '-')}.json.gz`);
-  writeFileSync(file, gzipSync(Buffer.from(JSON.stringify(payload)), { level: 9 }));
-  return { file, apps: apps.length, ranks: ranks.length, metrics: metrics.length };
+  const buf = gzipSync(Buffer.from(JSON.stringify(payload)), { level: 9 });
+  writeFileSync(file, buf);
+  return { file, apps: apps.length, ranks: ranks.length, metrics: metrics.length,
+           sizeKb: Math.round(buf.length / 1024) };
 }
 
 function listFiles() {
@@ -51,8 +56,8 @@ export function importSnapshots(db) {
   const files = listFiles();
   let loaded = 0;
 
-  const insertSnap = db.prepare("INSERT INTO snapshots (taken_at, status, note) VALUES (?, 'ok', ?)");
-  const insertRank = db.prepare('INSERT OR REPLACE INTO ranks (snapshot_id, app_id, country, chart, rank) VALUES (?, ?, ?, ?, ?)');
+  const insertSnap = db.prepare("INSERT INTO snapshots (taken_at, status, note, coverage) VALUES (?, 'ok', ?, ?)");
+  const insertRank = db.prepare('INSERT OR REPLACE INTO ranks (snapshot_id, app_id, country, chart, scope, rank) VALUES (?, ?, ?, ?, ?, ?)');
   const insertMetric = db.prepare(`INSERT OR REPLACE INTO app_metrics
     (snapshot_id, app_id, rating_count, rating_avg, real_installs, installs_bucket, iap_range, price, version, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
@@ -72,7 +77,7 @@ export function importSnapshots(db) {
     const data = JSON.parse(gunzipSync(readFileSync(join(SNAPSHOT_DIR, f))).toString('utf8'));
     if (existing.has(data.takenAt)) continue;
 
-    const snapshotId = Number(insertSnap.run(data.takenAt, data.note ?? null).lastInsertRowid);
+    const snapshotId = Number(insertSnap.run(data.takenAt, data.note ?? null, data.coverage ?? null).lastInsertRowid);
     const idOf = new Map();
     for (const a of data.apps) {
       upsertAppStmt.run(a.store, a.store_id, a.title, a.publisher, a.icon, a.url, a.genres, a.released_at, data.takenAt);
@@ -80,7 +85,7 @@ export function importSnapshots(db) {
     }
     for (const r of data.ranks) {
       const id = idOf.get(`${r.store}:${r.store_id}`);
-      if (id) insertRank.run(snapshotId, id, r.country, r.chart, r.rank);
+      if (id) insertRank.run(snapshotId, id, r.country, r.chart, r.scope ?? 'all', r.rank);
     }
     for (const m of data.metrics) {
       const id = idOf.get(`${m.store}:${m.store_id}`);

@@ -1,15 +1,16 @@
 import gplayPkg from 'google-play-scraper';
-import { PLAY_COLLECTIONS, CHART_DEPTH, PLAY_DETAIL_CONCURRENCY } from '../config.js';
+import { PLAY_COLLECTIONS, CHART_DEPTH, PLAY_DETAIL_CONCURRENCY, PLAY_DETAIL_DELAY_MS,
+         PLAY_DETAIL_DEADLINE_MS } from '../config.js';
 
 const gplay = gplayPkg.default ?? gplayPkg;
 
 /** Bir ülke + chart için sıralı oyun listesi (Play GAME kategorisi). */
-export async function fetchPlayChart(country, chart) {
+export async function fetchPlayChart(country, chart, category = 'GAME') {
   const collection = PLAY_COLLECTIONS[chart];
   if (!collection) return [];
   const res = await gplay.list({
     collection,
-    category: 'GAME',
+    category,
     num: CHART_DEPTH,
     country,
     lang: 'en',
@@ -32,8 +33,11 @@ export async function fetchPlayChart(country, chart) {
 export async function enrichPlayApps(appIds, country = 'us') {
   const out = new Map();
   const queue = [...appIds];
+  const deadline = Date.now() + PLAY_DETAIL_DEADLINE_MS;
+  let timedOut = false;
   const workers = Array.from({ length: PLAY_DETAIL_CONCURRENCY }, async () => {
     while (queue.length) {
+      if (Date.now() > deadline) { timedOut = true; break; }
       const appId = queue.shift();
       try {
         const d = await gplay.app({ appId, country, lang: 'en' });
@@ -58,9 +62,13 @@ export async function enrichPlayApps(appIds, country = 'us') {
       } catch {
         // tek uygulama düşerse radar durmaz
       }
-      await new Promise((r) => setTimeout(r, 120));
+      await new Promise((r) => setTimeout(r, PLAY_DETAIL_DELAY_MS));
     }
   });
   await Promise.all(workers);
+  if (timedOut) {
+    console.log(`  Play detay süre sınırına takıldı: ${out.size}/${appIds.length} alındı, ` +
+                `${queue.length} atlandı`);
+  }
   return out;
 }

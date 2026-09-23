@@ -31,7 +31,7 @@ function percentileMap(values) {
 }
 
 function loadSnapshot(db, snapshotId) {
-  const ranks = db.prepare('SELECT app_id, country, chart, rank FROM ranks WHERE snapshot_id = ?').all(snapshotId);
+  const ranks = db.prepare('SELECT app_id, country, chart, scope, rank FROM ranks WHERE snapshot_id = ?').all(snapshotId);
   const metrics = db.prepare('SELECT * FROM app_metrics WHERE snapshot_id = ?').all(snapshotId);
   const byApp = new Map();
   for (const r of ranks) {
@@ -50,13 +50,16 @@ function loadSnapshot(db, snapshotId) {
  * log kullanmanın sebebi: 60→10 hareketi 95→85'ten kıyasla çok daha büyük sayılmalı.
  */
 function rankMomentum(prevRanks, nowRanks, chart) {
-  const prev = new Map(prevRanks.filter((r) => r.chart === chart).map((r) => [r.country, r.rank]));
-  const now = new Map(nowRanks.filter((r) => r.chart === chart).map((r) => [r.country, r.rank]));
+  // Kıyas ülke + KAPSAM bazında: genel sıradaki hareketi alt tür sırasıyla
+  // karşılaştırmak anlamsız olurdu.
+  const key = (r) => `${r.country}|${r.scope ?? 'all'}`;
+  const prev = new Map(prevRanks.filter((r) => r.chart === chart).map((r) => [key(r), r.rank]));
+  const now = new Map(nowRanks.filter((r) => r.chart === chart).map((r) => [key(r), r.rank]));
   const countries = new Set([...prev.keys(), ...now.keys()]);
   if (!countries.size) return null;
   let num = 0, den = 0;
   for (const c of countries) {
-    const w = CW[c] ?? 0.5;
+    const w = CW[c.split('|')[0]] ?? 0.5;
     const p = prev.get(c) ?? MISSING_RANK;
     const n = now.get(c) ?? MISSING_RANK;
     num += w * (Math.log(p) - Math.log(n));
@@ -70,7 +73,7 @@ function daysBetween(a, b) {
 }
 
 export function computeScores(db, { snapshotId, prevSnapshotId } = {}) {
-  const snaps = db.prepare("SELECT id, taken_at FROM snapshots WHERE status='ok' ORDER BY id DESC").all();
+  const snaps = db.prepare("SELECT id, taken_at, coverage FROM snapshots WHERE status='ok' ORDER BY id DESC").all();
   if (!snaps.length) throw new Error('tamamlanmış snapshot yok');
   const cur = snapshotId ? snaps.find((s) => s.id === snapshotId) : snaps[0];
   // Önceki snapshot: SCORE_WINDOW_DAYS gün öncesine EN YAKIN olan.
@@ -84,7 +87,15 @@ export function computeScores(db, { snapshotId, prevSnapshotId } = {}) {
     // MIN_WINDOW_DAYS'ten yakın adaylar elenir: saatler arayla alınmış iki snapshot
     // arasındaki fark ivme değil gürültüdür ve gün başına çevrilince şişer.
     const cutoff = new Date(cur.taken_at).getTime() - MIN_WINDOW_DAYS * DAY;
-    const older = snaps.filter((s) => s.id < cur.id && new Date(s.taken_at).getTime() <= cutoff);
+    // Kapsam imzası eşleşmeyen snapshot ivme kıyasına giremez: farklı ülke
+    // sayısıyla alınmış iki tarama arasındaki "yeni ülke" farkı ivme değil,
+    // yapılandırma değişikliğidir.
+    const older = snaps.filter((s) => s.id < cur.id
+      && new Date(s.taken_at).getTime() <= cutoff
+      // İmzası bilinmeyen (eski) snapshot da giremez: kapsamını bilmediğimiz bir
+      // taramaya karşı ivme ölçmek, farkın gerçek mi yapılandırma mı olduğunu
+      // ayırt edememek demek.
+      && s.coverage && cur.coverage && s.coverage === cur.coverage);
     for (const s of older) {
       if (!prev || Math.abs(new Date(s.taken_at) - target) < Math.abs(new Date(prev.taken_at) - target)) prev = s;
     }
@@ -141,9 +152,14 @@ export function computeScores(db, { snapshotId, prevSnapshotId } = {}) {
       ? (countriesNow.size ? newCountries / countriesNow.size : 0)
       : (inNewFeed ? 1 : 0);
 
-    const grossRanks = d.ranks.filter((r) => r.chart === 'grossing');
+    // GENEL chart sıraları ile ALT TÜR sıraları aynı şey değil: "Bulmaca'da 5."
+    // ile "genel hasılatta 5." arasında büyüklük mertebesi fark var. Gelir ve
+    // monetizasyon yalnız genel ('all') sıralara bakar; alt tür sıraları
+    // yayılım ve ivme için kullanılır.
+    const overall = d.ranks.filter((r) => (r.scope ?? 'all') === 'all');
+    const grossRanks = overall.filter((r) => r.chart === 'grossing');
     const bestGross = grossRanks.length ? Math.min(...grossRanks.map((r) => r.rank)) : null;
-    const freeRanks = d.ranks.filter((r) => r.chart === 'free');
+    const freeRanks = overall.filter((r) => r.chart === 'free');
     const bestFree = freeRanks.length ? Math.min(...freeRanks.map((r) => r.rank)) : null;
     // para kazanma gücü: grossing sırası free sırasından iyiyse güçlü monetizasyon
     // grossing chart'ta hiç olmamak "veri yok" değil, ölçülmüş zayıflıktır -> null değil 0.

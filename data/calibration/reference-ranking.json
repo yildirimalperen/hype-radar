@@ -1,0 +1,28 @@
+{
+  "_comment": [
+    "Bağımsız gelir SIRALAMASI referansı. Rakam değil, sıra.",
+    "",
+    "NEREDEN: appmagic.rocks/top-charts -> TOP GROSSING -> store/kategori: Games,",
+    "GEOGRAPHY: Worldwide, TIME PERIOD: M. Giriş gerekmiyor. Sayılar bantlı",
+    "(\"> 20,000,000\") olduğu için rakamı değil yalnız sırayı alıyoruz.",
+    "",
+    "NEDEN ELLE: sayfa JS ile render ediliyor ve bot korumasına takılabilir.",
+    "Otomatik çekim kırıldığında radar sessizce yanlış çalışır; ayda birkaç dakika",
+    "elle giriş, sessizce bozulan bir boru hattından iyidir.",
+    "",
+    "NASIL KULLANILIR: doldur, sonra `node src/validate-ranking.js`. Çıktı iki şey",
+    "söyler: (1) Spearman sıra korelasyonu — modelimiz doğru sıralıyor mu,",
+    "(2) referansta olup radarda hiç görünmeyenler — kapsam boşluğumuz.",
+    "",
+    "store_id'leri data/radar.db'den doğrula; başlıkla eşleştirme güvenilir değil",
+    "(Candy Crush Saga ile Candy Crush Soda Saga aynı aramaya düşüyor)."
+  ],
+
+  "period": "",
+  "source": "appmagic.rocks/top-charts · Top Grossing · Games · Worldwide · Monthly",
+  "collectedAt": "",
+
+  "entries": [
+    { "rank": 1, "name": "", "ios": "", "android": "" }
+  ]
+}
