@@ -45,13 +45,18 @@ CREATE TABLE IF NOT EXISTS app_metrics (
 );
 
 -- Snapshot x ülke x chart başına sıra.
+-- scope: 'all' = genel oyun chart'ı, aksi hâlde alt tür kimliği (7011, GAME_PUZZLE...)
+-- Anahtara scope ŞART: alt tür sırası aksi hâlde genel sırayı eziyordu.
+-- Ayrıca gelir modeli yalnız 'all' sıralarını kullanabilir — "Bulmaca'da 5."
+-- ile "genel hasılatta 5." aynı gelir değil.
 CREATE TABLE IF NOT EXISTS ranks (
   snapshot_id INTEGER NOT NULL REFERENCES snapshots(id),
   app_id INTEGER NOT NULL REFERENCES apps(id),
   country TEXT NOT NULL,
   chart TEXT NOT NULL,
+  scope TEXT NOT NULL DEFAULT 'all',
   rank INTEGER NOT NULL,
-  PRIMARY KEY (snapshot_id, app_id, country, chart)
+  PRIMARY KEY (snapshot_id, app_id, country, chart, scope)
 );
 
 -- iOS <-> Android eşleşmesi (normalize başlık + yayıncı ile kurulur).
@@ -72,8 +77,8 @@ CREATE TABLE IF NOT EXISTS scores (
   PRIMARY KEY (snapshot_id, app_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_ranks_app ON ranks(app_id, chart, country);
-CREATE INDEX IF NOT EXISTS idx_ranks_snap ON ranks(snapshot_id, chart);
+CREATE INDEX IF NOT EXISTS idx_ranks_app ON ranks(app_id, chart, country, scope);
+CREATE INDEX IF NOT EXISTS idx_ranks_snap ON ranks(snapshot_id, chart, scope);
 CREATE INDEX IF NOT EXISTS idx_metrics_app ON app_metrics(app_id);
 `;
 
@@ -82,7 +87,22 @@ export function openDb() {
   const db = new DatabaseSync(DB_PATH);
   db.exec('PRAGMA journal_mode = WAL;');
   db.exec(SCHEMA);
+  migrate(db);
   return db;
+}
+
+/**
+ * Şema göçü. `CREATE TABLE IF NOT EXISTS` mevcut tabloyu değiştirmiyor, bu yüzden
+ * eski bir DB yeni sütunu görmüyordu. Veri kaybı riski yok: ranks tablosu
+ * data/snapshots/ dosyalarından yeniden kuruluyor, DB zaten türetilmiş bir önbellek.
+ */
+function migrate(db) {
+  const cols = db.prepare('PRAGMA table_info(ranks)').all().map((c) => c.name);
+  if (!cols.includes('scope')) {
+    db.exec('DROP TABLE ranks;');
+    db.exec(SCHEMA);
+    db.prepare("DELETE FROM snapshots WHERE id NOT IN (SELECT DISTINCT snapshot_id FROM app_metrics)").run();
+  }
 }
 
 export function startSnapshot(db, note = null) {

@@ -15,16 +15,18 @@ const OUT = resolve(ROOT, 'web/dashboard.html');
 //     sayfa başlıktan türetilen renkli karo çiziyor.
 //  2) Yayın boyut kapısı -> radarın anlamlı üst kısmı gömülüyor, tamamı
 //     data/radar.json dosyasında kalıyor.
-const EMBED_LIMIT = 400;
+// Kapsam 1.500'den 15.000 oyuna çıktı; 400'lük gömme arama sonuçlarını
+// gereksiz daraltıyordu. 1.000 satır sayfayı ~1 MB'da tutuyor.
+const EMBED_LIMIT = 1000;
 
 function pickEmbedded(games) {
   const keep = new Map();
   const add = (g) => { if (!keep.has(g.key)) keep.set(g.key, g); };
   games.slice().sort((a, b) => b.hype - a.hype).slice(0, EMBED_LIMIT).forEach(add);
   // Sekmelerin boş kalmaması için: hasılat ilk 60 ve 120 günden genç olanlar her hâlükârda girsin.
-  games.filter((g) => g.bestGross !== null).sort((a, b) => a.bestGross - b.bestGross).slice(0, 60).forEach(add);
+  games.filter((g) => g.bestGross !== null).sort((a, b) => a.bestGross - b.bestGross).slice(0, 150).forEach(add);
   games.filter((g) => g.ageDays !== null && g.ageDays <= 120)
-       .sort((a, b) => b.hype - a.hype).slice(0, 80).forEach(add);
+       .sort((a, b) => b.hype - a.hype).slice(0, 200).forEach(add);
   return [...keep.values()].sort((a, b) => b.hype - a.hype);
 }
 
@@ -49,6 +51,7 @@ function slim(report) {
       components: g.components, coverage: g.coverage, platforms: g.platforms,
       ranks: g.ranks, countryCount: g.countryCount, bestGross: g.bestGross, bestFree: g.bestFree,
       downloads: g.downloads, revenueDailyEstimate: g.revenueDailyEstimate, iapRange: g.iapRange,
+      trend: g.trend, revenueCumulativeEstimate: g.revenueCumulativeEstimate,
     })),
   };
 }

@@ -1,3 +1,5 @@
+import { COUNTRIES } from './config.js';
+
 // TAHMİN KATMANI — burada üretilen hiçbir sayı ölçülmüş değildir.
 // Gelir verisini ücretsiz veren mağaza yok; grossing sırasından modelleniyor.
 // Tüm sabitler burada ve tek yerde ayarlanabilir. Çıktıda source='estimated' etiketi taşır.
@@ -27,18 +29,21 @@
 // Serbest fit b'yi 0,666'ya yatırıyor ama bu bir kanıt değil, alt sıra verisinin
 // yokluğunun yan etkisi: tek alt-sıra çapasında hatayı 1,40×'ten 1,72×'e ÇIKARIYOR.
 // Eğimi değiştirmek için ilk 20 dışından gerçek veri gerekir.
-export const REV_CURVE = { A: 1_624_000, b: 0.8 };
+export const REV_CURVE = { A: 1_807_000, b: 0.8 };
 
-// Ülke pazar çarpanı (ABD = 1.0). Mağaza geliri büyüklüğüne göre kaba ölçek.
-export const COUNTRY_REV_WEIGHT = {
-  us: 1.00, jp: 0.55, kr: 0.30, gb: 0.12, de: 0.12, fr: 0.08, br: 0.05, tr: 0.02,
-};
+// Ülke pazar çarpanı (ABD = 1.0), config'deki tek kaynaktan.
+// Ayrı liste tutmak hataya açıktı: kapsam 8'den 30 ülkeye çıkınca buradaki
+// liste 8'de kaldı ve yeni ülkeler varsayılan 0,03 ile sayıldı.
+export const COUNTRY_REV_WEIGHT = Object.fromEntries(COUNTRIES.map((c) => [c.code, c.weight]));
 
 // Aynı sırada Play geliri iOS'un altında kalır (ARPU farkı).
 export const PLATFORM_REV_FACTOR = { ios: 1.0, android: 0.75 };
 
-// 8 ülke global oyun gelirinin tamamını kapsamıyor; kalanı için tek çarpan.
-export const GLOBAL_COVERAGE_UPLIFT = 1.6;
+// Taranan ülkeler global oyun gelirinin tamamını kapsamıyor; kalanı için tek çarpan.
+// 8 ülkedeyken 1,6 idi (kapsam ~%62). 30 ülkeye çıkınca ağırlık toplamı 2,24'ten
+// 2,80'e yükseldi -> kapsam ~%78 -> çarpan 1,28. Bunu güncellemeyi unutmak
+// geliri sessizce şişiriyordu (takip edilen toplam $885M/gün çıkmıştı).
+export const GLOBAL_COVERAGE_UPLIFT = 1.28;
 
 /**
  * Günlük gelir tahmini. ranks: [{country, chart:'grossing', rank}]

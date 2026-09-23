@@ -59,6 +59,25 @@ Bu ayrım panelde de görünür — tahmini sayılar `≈` ve kesikli altı çiz
   ile modellenir: `gün_geliri ≈ 1.624.000 × sıra^-0,80`, ülke pazar ağırlığı ve platform ARPU
   farkıyla ölçeklenir (`src/estimate.js`). **Bu bir model, ölçüm değil.**
 
+### Sıralama doğrulaması
+
+Gelir rakamını kimse ücretsiz vermiyor ama AppMagic'in açık top-charts sayfası
+girişsiz bir **sıralama** veriyor (sayılar bantlı: `> 20,000,000`). Rakamı
+alamıyoruz, sırayı alabiliyoruz — bir gelir modelinin asıl işi de zaten doğru
+sıralamak.
+
+`data/calibration/reference-ranking.json` **elle** doldurulur (aylık, birkaç
+dakika), sonra:
+
+```bash
+node src/validate-ranking.js   # Spearman sıra korelasyonu + kapsam boşluğu
+```
+
+Otomatik çekmiyoruz: sayfa JS-render, bot korumasına takılabilir ve kırıldığında
+radar sessizce yanlış çalışır. Elle giren 50 satır, sessizce bozulan bir boru
+hattından iyidir. Otomatik ve güvenli isteniyorsa doğru yol ücretli bir koltuk —
+API'leri var.
+
 ### Gelir modelinin kalibrasyonu
 
 Sabitler kafadan atılmıyor; ölçülen bir hataya bağlı (`src/calibrate-revenue.js`).
@@ -102,7 +121,29 @@ node src/publish.js      # skorla + paneli derle -> web/dashboard.html
 ./refresh.sh             # üçünü birden yap + Artifact'i güncelle
 ```
 
-Kapsam `src/config.js` içinde: ülke listesi, chart derinliği, eşzamanlılık.
+Kapsam `src/config.js` içinde.
+
+### Kapsam: neden iki katmanlı
+
+Ülke başına yalnız genel top-100'e bakmak, bir oyunu **patlama olduktan sonra**
+görmek demek. Alt tür chart'ları ücretsiz ve ayrı 100'er sıra veriyor; ölçtük:
+
+| | ABD, ücretsiz chart |
+|---|---|
+| Genel top-100 | 100 oyun |
+| Alt türlerden gelen yeni | +1.020 oyun |
+| **Toplam** | **1.120 (×11,2)** |
+
+Bulmaca kategorisinde 98/100, RPG'de 99/100 oyun genel listede **hiç yok**.
+Hype tam orada başlıyor. Bu yüzden:
+
+- **deep** ülkeler (8): tüm alt türler + ana chart'lar, iki mağaza
+- **broad** ülkeler (22): yalnız ana chart'lar — yayılım sinyali için ucuz kapsama
+
+Play detayı uygulama başına bir istek olduğu için bütçeli
+(`PLAY_DETAIL_BUDGET`): en iyi sıraya göre öncelikli çekiliyor. Bütçe dışı
+kalanlar radardan düşmüyor — sıra tabanlı bileşenlerle skorlanıyor, indirme
+bileşenleri boş kalıyor ve kapsam cezası uygulanıyor.
 
 ### Otomatik tazeleme
 GitHub Actions (`.github/workflows/radar.yml`) 2 günde bir çalışır: tarar, skorlar,
@@ -114,8 +155,16 @@ gh workflow run "Hype Radar tazeleme"    # elle tetikle
 gh run list --workflow radar.yml         # son koşular
 ```
 
-Geçmiş `data/snapshots/` altında sıkıştırılmış JSON olarak yaşar; runner temiz
-başladığı için DB her koşuda bu dosyalardan yeniden kurulur. Bu sayede paneli
+Geçmiş iki ayrı yerde, çünkü iki farklı işe yarıyor:
+
+- `data/snapshots/` — tam veri (tüm sıra satırları). Yalnız **ivme** kıyası için
+  gerekli, pencere 2 gün. Kapsam büyüyünce dosyalar megabaytlara çıktığı için
+  saklama 12 dosya (~24 gün).
+- `data/history/` — uygulama başına birkaç sayı. **Trend** için, süresiz saklanıyor.
+  Aylık dosyalara bölünmüş. `scores-YYYY-MM` dosyaları skorlama anında yazılıyor
+  (hype, günlük gelir tahmini) — model değişirse yeniden üretilebilsinler diye ayrı.
+
+Runner temiz başladığı için DB her koşuda snapshot dosyalarından yeniden kurulur. Bu sayede paneli
 yeniden toplamadan da üretebilirsiniz:
 
 ```bash
@@ -139,7 +188,9 @@ src/collect.js         toplama orkestrasyonu -> snapshot
 src/score.js           hype skoru
 src/estimate.js        TAHMİN katmanı (gelir modeli, indirme kalibrasyonu)
 src/calibrate-revenue.js  gelir eğrisini çapalara fit eder + hata raporu
-src/snapshot-io.js     snapshot dışa/içe aktarma (repo'da taşınan geçmiş)
+src/snapshot-io.js     snapshot dışa/içe aktarma (ivme için kısa geçmiş)
+src/history.js         kompakt uzun vadeli seri (trend için)
+src/validate-ranking.js  gelir SIRALAMASINI bağımsız referansa karşı ölçer
 src/report.js          çapraz-platform birleştirme -> data/radar.json
 src/publish.js         panel HTML üretimi
 web/template.html      panel arayüzü

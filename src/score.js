@@ -31,7 +31,7 @@ function percentileMap(values) {
 }
 
 function loadSnapshot(db, snapshotId) {
-  const ranks = db.prepare('SELECT app_id, country, chart, rank FROM ranks WHERE snapshot_id = ?').all(snapshotId);
+  const ranks = db.prepare('SELECT app_id, country, chart, scope, rank FROM ranks WHERE snapshot_id = ?').all(snapshotId);
   const metrics = db.prepare('SELECT * FROM app_metrics WHERE snapshot_id = ?').all(snapshotId);
   const byApp = new Map();
   for (const r of ranks) {
@@ -50,13 +50,16 @@ function loadSnapshot(db, snapshotId) {
  * log kullanmanın sebebi: 60→10 hareketi 95→85'ten kıyasla çok daha büyük sayılmalı.
  */
 function rankMomentum(prevRanks, nowRanks, chart) {
-  const prev = new Map(prevRanks.filter((r) => r.chart === chart).map((r) => [r.country, r.rank]));
-  const now = new Map(nowRanks.filter((r) => r.chart === chart).map((r) => [r.country, r.rank]));
+  // Kıyas ülke + KAPSAM bazında: genel sıradaki hareketi alt tür sırasıyla
+  // karşılaştırmak anlamsız olurdu.
+  const key = (r) => `${r.country}|${r.scope ?? 'all'}`;
+  const prev = new Map(prevRanks.filter((r) => r.chart === chart).map((r) => [key(r), r.rank]));
+  const now = new Map(nowRanks.filter((r) => r.chart === chart).map((r) => [key(r), r.rank]));
   const countries = new Set([...prev.keys(), ...now.keys()]);
   if (!countries.size) return null;
   let num = 0, den = 0;
   for (const c of countries) {
-    const w = CW[c] ?? 0.5;
+    const w = CW[c.split('|')[0]] ?? 0.5;
     const p = prev.get(c) ?? MISSING_RANK;
     const n = now.get(c) ?? MISSING_RANK;
     num += w * (Math.log(p) - Math.log(n));
@@ -141,9 +144,14 @@ export function computeScores(db, { snapshotId, prevSnapshotId } = {}) {
       ? (countriesNow.size ? newCountries / countriesNow.size : 0)
       : (inNewFeed ? 1 : 0);
 
-    const grossRanks = d.ranks.filter((r) => r.chart === 'grossing');
+    // GENEL chart sıraları ile ALT TÜR sıraları aynı şey değil: "Bulmaca'da 5."
+    // ile "genel hasılatta 5." arasında büyüklük mertebesi fark var. Gelir ve
+    // monetizasyon yalnız genel ('all') sıralara bakar; alt tür sıraları
+    // yayılım ve ivme için kullanılır.
+    const overall = d.ranks.filter((r) => (r.scope ?? 'all') === 'all');
+    const grossRanks = overall.filter((r) => r.chart === 'grossing');
     const bestGross = grossRanks.length ? Math.min(...grossRanks.map((r) => r.rank)) : null;
-    const freeRanks = d.ranks.filter((r) => r.chart === 'free');
+    const freeRanks = overall.filter((r) => r.chart === 'free');
     const bestFree = freeRanks.length ? Math.min(...freeRanks.map((r) => r.rank)) : null;
     // para kazanma gücü: grossing sırası free sırasından iyiyse güçlü monetizasyon
     // grossing chart'ta hiç olmamak "veri yok" değil, ölçülmüş zayıflıktır -> null değil 0.
