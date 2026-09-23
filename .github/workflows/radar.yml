@@ -87,7 +87,7 @@ jobs:
         run: |
           git config user.name  "hype-radar[bot]"
           git config user.email "hype-radar@users.noreply.github.com"
-          git add data/snapshots docs
+          git add data/snapshots data/history docs
           if git diff --cached --quiet; then
             echo "değişiklik yok, commit atlanıyor"
           else
