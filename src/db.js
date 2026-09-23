@@ -6,11 +6,15 @@ export const DB_PATH = resolve(import.meta.dirname, '../data/radar.db');
 
 const SCHEMA = `
 -- Her toplama koşusu bir snapshot.
+-- coverage: taramanın kapsam imzası (ör. "30c/8d"). İvme kıyası YALNIZ aynı
+-- imzalı snapshot'lar arasında yapılabilir: 8 ülkelik bir taramayı 30 ülkelikle
+-- kıyaslamak her oyunu "22 yeni ülkeye girdi" gibi gösterip ivmeyi topluca şişirir.
 CREATE TABLE IF NOT EXISTS snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   taken_at TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'running',
-  note TEXT
+  note TEXT,
+  coverage TEXT
 );
 
 -- Uygulama kimliği: (store, store_id) tekil. iOS ve Android sürümleri ayrı satır,
@@ -97,6 +101,9 @@ export function openDb() {
  * data/snapshots/ dosyalarından yeniden kuruluyor, DB zaten türetilmiş bir önbellek.
  */
 function migrate(db) {
+  const snapCols = db.prepare('PRAGMA table_info(snapshots)').all().map((c) => c.name);
+  if (!snapCols.includes('coverage')) db.exec('ALTER TABLE snapshots ADD COLUMN coverage TEXT;');
+
   const cols = db.prepare('PRAGMA table_info(ranks)').all().map((c) => c.name);
   if (!cols.includes('scope')) {
     db.exec('DROP TABLE ranks;');
@@ -105,9 +112,9 @@ function migrate(db) {
   }
 }
 
-export function startSnapshot(db, note = null) {
-  const stmt = db.prepare('INSERT INTO snapshots (taken_at, status, note) VALUES (?, ?, ?)');
-  const info = stmt.run(new Date().toISOString(), 'running', note);
+export function startSnapshot(db, note = null, coverage = null) {
+  const stmt = db.prepare('INSERT INTO snapshots (taken_at, status, note, coverage) VALUES (?, ?, ?, ?)');
+  const info = stmt.run(new Date().toISOString(), 'running', note, coverage);
   return Number(info.lastInsertRowid);
 }
 

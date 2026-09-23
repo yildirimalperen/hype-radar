@@ -30,7 +30,9 @@ export async function collect({ note = null } = {}) {
   const restored = importSnapshots(db);
   if (restored.loaded) log(`${restored.loaded} snapshot repo'dan geri yüklendi (${restored.files} dosya)`);
 
-  const snapshotId = startSnapshot(db, note);
+  // Kapsam imzası: ivme yalnız aynı kapsamla alınmış snapshot'lara karşı ölçülebilir.
+  const coverage = `${COUNTRIES.length}c/${COUNTRIES.filter((c) => c.deep).length}d`;
+  const snapshotId = startSnapshot(db, note, coverage);
   log(`snapshot #${snapshotId} başladı`);
 
   const insertRank = db.prepare(

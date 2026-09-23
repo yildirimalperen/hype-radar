@@ -35,7 +35,7 @@ export function exportSnapshot(db, snapshotId) {
            m.installs_bucket, m.iap_range, m.price, m.version, m.updated_at
     FROM app_metrics m JOIN apps a ON a.id = m.app_id WHERE m.snapshot_id = ?`).all(snapshotId);
 
-  const payload = { version: 1, takenAt: snap.taken_at, note: snap.note, apps, ranks, metrics };
+  const payload = { version: 2, takenAt: snap.taken_at, note: snap.note, coverage: snap.coverage ?? null, apps, ranks, metrics };
   mkdirSync(SNAPSHOT_DIR, { recursive: true });
   const file = join(SNAPSHOT_DIR, `${snap.taken_at.slice(0, 19).replace(/[:T]/g, '-')}.json.gz`);
   const buf = gzipSync(Buffer.from(JSON.stringify(payload)), { level: 9 });
@@ -56,7 +56,7 @@ export function importSnapshots(db) {
   const files = listFiles();
   let loaded = 0;
 
-  const insertSnap = db.prepare("INSERT INTO snapshots (taken_at, status, note) VALUES (?, 'ok', ?)");
+  const insertSnap = db.prepare("INSERT INTO snapshots (taken_at, status, note, coverage) VALUES (?, 'ok', ?, ?)");
   const insertRank = db.prepare('INSERT OR REPLACE INTO ranks (snapshot_id, app_id, country, chart, scope, rank) VALUES (?, ?, ?, ?, ?, ?)');
   const insertMetric = db.prepare(`INSERT OR REPLACE INTO app_metrics
     (snapshot_id, app_id, rating_count, rating_avg, real_installs, installs_bucket, iap_range, price, version, updated_at)
@@ -77,7 +77,7 @@ export function importSnapshots(db) {
     const data = JSON.parse(gunzipSync(readFileSync(join(SNAPSHOT_DIR, f))).toString('utf8'));
     if (existing.has(data.takenAt)) continue;
 
-    const snapshotId = Number(insertSnap.run(data.takenAt, data.note ?? null).lastInsertRowid);
+    const snapshotId = Number(insertSnap.run(data.takenAt, data.note ?? null, data.coverage ?? null).lastInsertRowid);
     const idOf = new Map();
     for (const a of data.apps) {
       upsertAppStmt.run(a.store, a.store_id, a.title, a.publisher, a.icon, a.url, a.genres, a.released_at, data.takenAt);

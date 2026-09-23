@@ -73,7 +73,7 @@ function daysBetween(a, b) {
 }
 
 export function computeScores(db, { snapshotId, prevSnapshotId } = {}) {
-  const snaps = db.prepare("SELECT id, taken_at FROM snapshots WHERE status='ok' ORDER BY id DESC").all();
+  const snaps = db.prepare("SELECT id, taken_at, coverage FROM snapshots WHERE status='ok' ORDER BY id DESC").all();
   if (!snaps.length) throw new Error('tamamlanmış snapshot yok');
   const cur = snapshotId ? snaps.find((s) => s.id === snapshotId) : snaps[0];
   // Önceki snapshot: SCORE_WINDOW_DAYS gün öncesine EN YAKIN olan.
@@ -87,7 +87,15 @@ export function computeScores(db, { snapshotId, prevSnapshotId } = {}) {
     // MIN_WINDOW_DAYS'ten yakın adaylar elenir: saatler arayla alınmış iki snapshot
     // arasındaki fark ivme değil gürültüdür ve gün başına çevrilince şişer.
     const cutoff = new Date(cur.taken_at).getTime() - MIN_WINDOW_DAYS * DAY;
-    const older = snaps.filter((s) => s.id < cur.id && new Date(s.taken_at).getTime() <= cutoff);
+    // Kapsam imzası eşleşmeyen snapshot ivme kıyasına giremez: farklı ülke
+    // sayısıyla alınmış iki tarama arasındaki "yeni ülke" farkı ivme değil,
+    // yapılandırma değişikliğidir.
+    const older = snaps.filter((s) => s.id < cur.id
+      && new Date(s.taken_at).getTime() <= cutoff
+      // İmzası bilinmeyen (eski) snapshot da giremez: kapsamını bilmediğimiz bir
+      // taramaya karşı ivme ölçmek, farkın gerçek mi yapılandırma mı olduğunu
+      // ayırt edememek demek.
+      && s.coverage && cur.coverage && s.coverage === cur.coverage);
     for (const s of older) {
       if (!prev || Math.abs(new Date(s.taken_at) - target) < Math.abs(new Date(prev.taken_at) - target)) prev = s;
     }
