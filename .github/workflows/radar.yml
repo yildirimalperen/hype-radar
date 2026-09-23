@@ -19,6 +19,9 @@ on:
 concurrency:
   group: hype-radar-refresh
   cancel-in-progress: false
+  # Varsayılan kuyruk tek bekleyen koşu tutar ve yenisi gelince onu iptal eder;
+  # yedek cron bekleyen bir elle koşuyu düşürmesin.
+  queue: max
 
 permissions:
   contents: write   # snapshot + docs/ çıktısını repo'ya yazmak için
