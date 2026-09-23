@@ -4,7 +4,10 @@ on:
   schedule:
     # 2 günde bir, 06:17 UTC. Ayın tek günlerinde koşar; ay sonunda
     # 31->1 geçişinde bir günlük sapma olur, bu kabul edilebilir.
+    # GitHub zamanlamayı garanti etmez: koşular saatlerce gecikebiliyor ya da
+    # hiç gelmiyor. 10:47 yedektir; o gün snapshot alındıysa guard atlatır.
     - cron: '17 6 */2 * *'
+    - cron: '47 10 */2 * *'
   workflow_dispatch:
     inputs:
       note:
@@ -16,16 +19,45 @@ on:
 concurrency:
   group: hype-radar-refresh
   cancel-in-progress: false
+  # Varsayılan kuyruk tek bekleyen koşu tutar ve yenisi gelince onu iptal eder;
+  # yedek cron bekleyen bir elle koşuyu düşürmesin.
+  queue: max
 
 permissions:
   contents: write   # snapshot + docs/ çıktısını repo'ya yazmak için
 
 jobs:
+  # Zamanlı koşu o gün zaten snapshot alınmışsa atlanır: yedek ya da gecikmiş
+  # koşu ikinci snapshot üretip RETENTION'daki geçmişi yarıya indirmesin.
+  # Elle tetikleme her zaman koşar.
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - id: check
+        if: github.event_name == 'schedule'
+        run: |
+          if ls data/snapshots/"$(date -u +%Y-%m-%d)"-*.json.gz >/dev/null 2>&1; then
+            echo "bugünün snapshot'ı var, koşu atlanıyor"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
   refresh:
+    needs: guard
+    if: needs.guard.outputs.skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Varsayılan, tetiklenme anındaki commit'tir. Sırada bekleyen koşu
+          # öndekinin push'undan sonra başlarsa eski commit'ten push reddedilir;
+          # dalın o anki ucunu çek.
+          ref: ${{ github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
